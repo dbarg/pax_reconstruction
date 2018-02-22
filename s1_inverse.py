@@ -61,7 +61,7 @@ def getS1AreaCorrectedER():
     #)
 
         
-    timings = np.concatenate((primary_timings, secondary_timings))
+    #timings = np.concatenate((primary_timings, secondary_timings))
 
     
     
