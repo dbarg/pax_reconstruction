@@ -30,7 +30,7 @@ def getS1AreaCorrected():
 
 def getJSON():
     
-    filename_json = '../pax_waveform_simulator/pax_output/instructions_000000/pax_info.json'
+    filename_json = '../pax_waveform_simulator/pax_output/Feb26/instructions_000000/pax_info.json'
     file_json     =  open(filename_json)
     data_json     = json.load(file_json)
     data_json     = data_json['configuration']
