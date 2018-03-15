@@ -29,7 +29,7 @@ def bargeModel_xyS2():
     ######################################################################################
     
     inputDim   = 127
-    outputDim  = 3
+    outputDim  = 2
     
     reg_scale  = 0.00100 # possibly bad
     bias_init  = 'zeros'
