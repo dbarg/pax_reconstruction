@@ -1,6 +1,7 @@
-predictions/
-models/
-plots/
+predictions/*.pkl
+models/*.h5
+models/*.png
+plots/*.png
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
