@@ -46,7 +46,14 @@ def bargeModel_xyz():
     model = Sequential()
     
     #model.add(Dense(inputDim, activation=activation, input_dim=inputDim))
-    model.add(Dense(inputDim, input_dim=inputDim))
+    model.add(Dense(inputDim, input_dim=inputDim, activation=activation))
+    
+    
+    ######################################################################################
+    # Normalization
+    ######################################################################################
+    
+    #model.add(BatchNormalization())
     
     
     ######################################################################################
@@ -54,7 +61,7 @@ def bargeModel_xyz():
     ######################################################################################
     
     model.add(Dense(
-        100,
+        128,
         activation         = activation,
         bias_initializer   = bias_init,
         use_bias           = bias_use,
@@ -64,49 +71,49 @@ def bargeModel_xyz():
     model.add(Dropout(keep_rate))
     
     
-    ######################################################################################
-    # Hidden Layer 2
-    ######################################################################################
-    
-    model.add(Dense(
-        80,
-        activation         = activation,
-        bias_initializer   = bias_init,
-        use_bias           = bias_use,
-        kernel_regularizer = kern_reg
-    ))
-    
-    model.add(Dropout(keep_rate))
-    
-    
-    ######################################################################################
-    # Hidden Layer 3
-    ######################################################################################
-    
-    model.add(Dense(
-        40,
-        activation         = activation,
-        bias_initializer   = bias_init,
-        use_bias           = bias_use,
-        kernel_regularizer = kern_reg
-    ))
-    
-    model.add(Dropout(keep_rate))
+    #######################################################################################
+    ## Hidden Layer 2
+    #######################################################################################
+    #
+    #model.add(Dense(
+    #    80,
+    #    activation         = activation,
+    #    bias_initializer   = bias_init,
+    #    use_bias           = bias_use,
+    #    kernel_regularizer = kern_reg
+    #))
+    #
+    #model.add(Dropout(keep_rate))
     
     
-    ######################################################################################
-    # Hidden Layer 4
-    ######################################################################################
+    #######################################################################################
+    ## Hidden Layer 3
+    #######################################################################################
+    #
+    #model.add(Dense(
+    #    40,
+    #    activation         = activation,
+    #    bias_initializer   = bias_init,
+    #    use_bias           = bias_use,
+    #    kernel_regularizer = kern_reg
+    #))
+    #
+    #model.add(Dropout(keep_rate))
     
-    model.add(Dense(
-        20,
-        activation         = activation,
-        bias_initializer   = bias_init,
-        use_bias           = bias_use,
-        kernel_regularizer = kern_reg
-    ))
     
-    model.add(Dropout(keep_rate))
+    #######################################################################################
+    ## Hidden Layer 4
+    #######################################################################################
+    #
+    #model.add(Dense(
+    #    20,
+    #    activation         = activation,
+    #    bias_initializer   = bias_init,
+    #    use_bias           = bias_use,
+    #    kernel_regularizer = kern_reg
+    #))
+    #
+    #model.add(Dropout(keep_rate))
     
    
     ######################################################################################
