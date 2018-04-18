@@ -23,8 +23,9 @@ def lstmModel(n_channels, n_timesteps, n_outputs, activation='sigmoid'):
     ######################################################################################
     ######################################################################################
     
-    name = 'model_xy_s2waveforms_lstm' # + '_' + datetime.datetime.now().strftime("%y%m%d%H%M")
-    
+    name      = 'model_xy_s2waveforms_lstm' # + '_' + datetime.datetime.now().strftime("%y%m%d%H%M")
+    keep_rate = 0.00005
+
 
     ####################################################################################################
     ####################################################################################################
@@ -32,6 +33,7 @@ def lstmModel(n_channels, n_timesteps, n_outputs, activation='sigmoid'):
     model = Sequential()
     model.add(LSTM(n_channels, input_shape=(n_timesteps, n_channels), return_sequences=True))
     model.add(LSTM(n_channels))
+    model.add(Dropout(keep_rate))
     model.add(Dense(n_outputs, activation=activation))
     
     model.compile(
@@ -48,7 +50,7 @@ def lstmModel(n_channels, n_timesteps, n_outputs, activation='sigmoid'):
     ######################################################################################
     
     folder   = "models/"    
-    name     = 'model_xy_s2waveforms_lstm_' + 'elu'
+    name     = 'model_xy_s2waveforms_lstm_' + activation
     name_h5  = folder + name + ".h5"
     name_png = folder + name + ".png"
     
