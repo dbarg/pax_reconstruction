@@ -24,6 +24,7 @@ def lstmModel(
     n_timesteps,
     n_outputs,
     activation='sigmoid',
+    keep_rate=0.00005,
     go_backwards=False,
     unroll=False):
 
@@ -34,7 +35,6 @@ def lstmModel(
     ######################################################################################
     
     name      = 'model_xy_s2waveforms_lstm' # + '_' + datetime.datetime.now().strftime("%y%m%d%H%M")
-    keep_rate = 0.00005
 
 
     ####################################################################################################
