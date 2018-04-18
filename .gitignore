@@ -1,6 +1,6 @@
 predictions/*.pkl
-models/*.h5
-models/*.png
+*.h5
+*.png
 plots/*.png
 
 # Byte-compiled / optimized / DLL files
