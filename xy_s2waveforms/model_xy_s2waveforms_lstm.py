@@ -19,7 +19,16 @@ from keras.utils import plot_model
 ##########################################################################################
 ##########################################################################################
 
-def lstmModel(n_channels, n_timesteps, n_outputs, activation='sigmoid'):
+def lstmModel(
+    n_channels,
+    n_timesteps,
+    n_outputs,
+    activation='sigmoid',
+    go_backwards=False,
+    unroll=False):
+
+    #return_state=False,
+    #stateful=False,
 
     ######################################################################################
     ######################################################################################
@@ -29,10 +38,19 @@ def lstmModel(n_channels, n_timesteps, n_outputs, activation='sigmoid'):
 
 
     ####################################################################################################
+    # To Do: understand stateful, return_state
     ####################################################################################################
+
+    lstm = LSTM(
+        n_channels,
+        input_shape=(n_timesteps, n_channels),
+        return_sequences=True,
+        go_backwards=go_backwards,
+        unroll=unroll
+    )
     
     model = Sequential()
-    model.add(LSTM(n_channels, input_shape=(n_timesteps, n_channels), return_sequences=True))
+    model.add(lstm)
     model.add(LSTM(n_channels))
     model.add(Dropout(keep_rate))
     model.add(Dense(n_outputs, activation=activation))
