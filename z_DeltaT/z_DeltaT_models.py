@@ -17,25 +17,26 @@ from keras.utils import plot_model
 ##########################################################################################
 ##########################################################################################
 
-def bargeModel_xyzS2():
+def bargeModel_z():
 
     ######################################################################################
     ######################################################################################
     
-    name = 'barge_xyzS2' # + '_' + datetime.datetime.now().strftime("%y%m%d%H%M")
+    name = 'barge_z' # + '_' + datetime.datetime.now().strftime("%y%m%d%H%M")
     
     
     ######################################################################################
     ######################################################################################
     
-    inputDim   = 127 + 1
-    outputDim  = 4
+    inputDim   = 1
+    outputDim  = 1
     
     reg_scale  = 0.00100 # possibly bad
     bias_init  = 'zeros'
     bias_use   = True
     kern_reg   = regularizers.l2(reg_scale)
-    activation = 'elu'
+    #activation = 'elu'
+    activation = 'linear'
     keep_rate  = 0.00005
     
 
@@ -45,12 +46,12 @@ def bargeModel_xyzS2():
     
     model = Sequential()
     
-    #model.add(Dense(inputDim, input_dim=inputDim))
-    model.add(Dense(inputDim, input_dim=inputDim, activation=activation))
+    #model.add(Dense(inputDim, activation=activation, input_dim=inputDim))
+    model.add(Dense(inputDim, input_dim=inputDim))
     
     
     ######################################################################################
-    # Hidden Layer
+    # Hidden Layer 1
     ######################################################################################
     
     model.add(Dense(
@@ -95,7 +96,7 @@ def bargeModel_xyzS2():
     
     
     ######################################################################################
-    # Hidden Layer 1
+    # Hidden Layer 4
     ######################################################################################
     
     model.add(Dense(
@@ -128,3 +129,4 @@ def bargeModel_xyzS2():
     ######################################################################################
     
     return model, name
+

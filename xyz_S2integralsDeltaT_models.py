@@ -61,7 +61,7 @@ def bargeModel_xyz():
     ######################################################################################
     
     model.add(Dense(
-        128,
+        4*127+1,
         activation         = activation,
         bias_initializer   = bias_init,
         use_bias           = bias_use,
@@ -69,6 +69,21 @@ def bargeModel_xyz():
     ))
     
     model.add(Dropout(keep_rate))
+   
+
+    #######################################################################################
+    ## Hidden Layer 2
+    #######################################################################################
+    #
+    #model.add(Dense(
+    #    127+1,
+    #    activation         = activation,
+    #    bias_initializer   = bias_init,
+    #    use_bias           = bias_use,
+    #    kernel_regularizer = kern_reg
+    #))
+    #
+    #model.add(Dropout(keep_rate))
     
     
     #######################################################################################
@@ -127,7 +142,7 @@ def bargeModel_xyz():
     # Compile model
     ######################################################################################
     
-    model.compile(loss='mean_squared_error', optimizer='adam')
+    model.compile(loss='mean_squared_error', optimizer='adam', metrics=['acc'])
     
     
     ######################################################################################
