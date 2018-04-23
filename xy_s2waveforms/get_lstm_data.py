@@ -92,10 +92,10 @@ def get_data(df_events, s2_window_max):
         y_true          = df_event.loc['y'              ]
        
      
-        print(" -> Event Number: " + str(event_num))
+        print(" -> Event Index, Event Number: " + str(iEvent) + ", " + str(event_num))
         clear_output(wait=True)
+        
         #display(events_df[0:1][0:10])
-    
         #break
         
         ################################################################################################
@@ -180,8 +180,7 @@ def get_data(df_events, s2_window_max):
             ############################################################################################
             
             event_train_data[:, iChannel] = arr_channel_padded # timeseries for iChannel
-            event_train_truth[0]          = x_true
-            event_train_truth[1]          = y_true
+
         
             #print(arr_channel_padded.shape)
                 
@@ -196,8 +195,12 @@ def get_data(df_events, s2_window_max):
         ################################################################################################
         ################################################################################################
         
-        train_data [0, :, :] = event_train_data
-        train_truth[0, :   ] = event_train_truth
+        train_data [iEvent, :, :] = event_train_data
+        event_train_truth[0]      = x_true
+        event_train_truth[1]      = y_true
+        train_truth[iEvent, :]    = event_train_truth
+
+        #print("x, y: " + str(x_true) + ", " + str(y_true))
         
         
         ################################################################################################

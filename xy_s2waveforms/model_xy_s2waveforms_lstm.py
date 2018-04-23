@@ -23,7 +23,8 @@ def lstmModel(
     n_channels,
     n_timesteps,
     n_outputs,
-    activation='sigmoid',
+    #activation='sigmoid',
+    activation='elu',
     keep_rate=0.00005,
     go_backwards=False,
     unroll=False):
@@ -34,7 +35,7 @@ def lstmModel(
     ######################################################################################
     ######################################################################################
     
-    name      = 'model_xy_s2waveforms_lstm' # + '_' + datetime.datetime.now().strftime("%y%m%d%H%M")
+    name = 'model_xy_s2waveforms_lstm_' + activation
 
 
     ####################################################################################################
@@ -69,7 +70,6 @@ def lstmModel(
     ######################################################################################
     
     folder   = "models/"    
-    name     = 'model_xy_s2waveforms_lstm_' + activation
     name_h5  = folder + name + ".h5"
     name_png = folder + name + ".png"
     
