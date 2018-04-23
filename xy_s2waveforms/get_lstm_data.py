@@ -20,8 +20,6 @@ from pax_utils import waveform_utils
 
 def get_data(df_events, s2_window_max):
  
-    print()
-
     ####################################################################################################
     # Input directory - containing S2 waveforms for all top channels
     ####################################################################################################
@@ -29,7 +27,6 @@ def get_data(df_events, s2_window_max):
     dir_input_s2    = "../../pax_merge/merged/waveforms_test/s2"
     dir_format_s2   = dir_input_s2 + '/' + 'event' + ('[0-9]' * 4) + '_S2waveforms.pkl'
     lst_contents_s2 = glob.glob(dir_format_s2)
-    
     lst_events      = df_events['event_number'].as_matrix().tolist()
     
     
@@ -38,8 +35,8 @@ def get_data(df_events, s2_window_max):
     # Truth data shape: (1, 2)
     ####################################################################################################
     
-    nEvents           = len(lst_contents_s2)
-
+    #nEvents    = len(lst_contents_s2)
+    nEvents    = len(df_events.index)
     n_channels = 127
     
     
@@ -59,7 +56,9 @@ def get_data(df_events, s2_window_max):
     nEmpty = 0
     
     #for iEvent, infile in enumerate(lst_contents_s2):
-    for iEvent in lst_events:
+    #for iEvent in lst_events:
+    for iEvent, event_num in enumerate(lst_events):
+        
         
         ################################################################################################
         # Get Event Information
@@ -67,15 +66,15 @@ def get_data(df_events, s2_window_max):
         
         #event_num = int(os.path.basename(infile).split("_")[0].replace("event", ""))
         
-        event_num = iEvent
+        #event_num = iEvent
         infile    = dir_input_s2 + '/event' + format(event_num, '04d') + '_S2waveforms.pkl'
 
-        print(iEvent)
-        print(infile)
+        #print(iEvent)
+        #print(infile)
         
-        if (iEvent > 3):
+        #if (iEvent > 3):
             
-            break
+        #    break
             
         #continue
         
@@ -94,10 +93,11 @@ def get_data(df_events, s2_window_max):
        
      
         print(" -> Event Number: " + str(event_num))
-        #clear_output(wait=True)
+        clear_output(wait=True)
         #display(events_df[0:1][0:10])
     
-    
+        #break
+        
         ################################################################################################
         ################################################################################################
         
@@ -254,7 +254,7 @@ def getEventsDataFrame(input_path):
     ################################################################################################
 
     events_df = pd.read_pickle(input_path)
-    #events_df = events_df[events_df['intr_count'] > 0] 
+    events_df = events_df[events_df['intr_count'] > 0] 
 
     
     ################################################################################################
