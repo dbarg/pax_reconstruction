@@ -16,6 +16,8 @@ from IPython.display import display
 sys.path.append(os.path.abspath("../../"))
 from pax_utils import waveform_utils
 from pax_utils import performance_utils
+from pax_utils import s1s2_utils
+from pax_utils import numeric_utils
 
 
 ####################################################################################################
@@ -215,40 +217,62 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
                 ########################################################################################
                 ########################################################################################
             
-                if (resample_factor == s2_window_max):
-                
-                    str_chan   = 's2_area_%03d' % iChannel
-                    
-                    s2integral_df  = df_event[:][str_chan].astype('float32')
-                    s2integral_arr = arr_resampled[0].astype('float32')
-                        
-                    assert(arr_resampled.size == 1)
-                    
-                    relerr = abs(s2integral_df - s2integral_arr)
-                    
-                    if (relerr > 0):
-                        
-                        relerr /= s2integral_df
-                        
-                    eq = relerr < 0.1
-                    
-                    if (not eq):
-                     
-                        print()
-                        print(event_num)
-                        print(s2integral_df)
-                        print(s2integral_arr)
-                        print(relerr)
-
-                    #assert(eq)
+                #if (resample_factor == s2_window_max):
+                #
+                #    str_chan   = 's2_area_%03d' % iChannel
+                #    
+                #    s2integral_df  = df_event[:][str_chan].astype('float32')
+                #    s2integral_arr = arr_resampled[0].astype('float32')
+                #        
+                #    assert(arr_resampled.size == 1)
+                #    
+                #    relerr = abs(s2integral_df - s2integral_arr)
+                #    
+                #    if (relerr > 0):
+                #        
+                #        relerr /= s2integral_df
+                #        
+                #    eq = relerr < 0.1
+                #    
+                #    if (not eq):
+                #     
+                #        print()
+                #        print("event:        " + str(event_num))
+                #        print("df integral:  " + str(s2integral_df))
+                #        print("arr integral: " + str(s2integral_arr))
+                #        print("err:          " + str(relerr))
+#
+                #    #assert(eq)
                 
                 
             ############################################################################################
-            # End loop over channels
             ############################################################################################
             
             continue
     
+        
+        ################################################################################################
+        # End loop over channels
+        ################################################################################################
+        
+        
+        if (resample_factor == s2_window_max):
+        
+            arr_s2integrals_evt   = df_event[s1s2_utils.getS2integralsDataFrameColumns()].as_matrix()
+            arr_s2integrals_wfs   = train_data_resampled[iEvent, :]
+            arr_s2integrals_equal = numeric_utils.compareArrays(arr_s2integrals_evt, arr_s2integrals_wfs, 0.2)
+                
+            if (not arr_s2integrals_equal):
+                
+                print("event: " + str(event_num))
+                print(arr_s2integrals_evt.size)
+                print(arr_s2integrals_evt)
+                print()
+                print(arr_s2integrals_wfs.size)
+                print(arr_s2integrals_wfs)
+            
+            assert(arr_s2integrals_equal)
+        
         
         ################################################################################################
         ################################################################################################
