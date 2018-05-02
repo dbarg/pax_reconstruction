@@ -46,24 +46,68 @@ def xy_s2integrals_dnnModel(activation='elu', keep_rate=0.00005):
     
     
     ######################################################################################
-    # Hidden Layer 1
+    # Hidden Layer
     ######################################################################################
     
     model.add(Dense(
-        127,
+        inputDim*4,
         activation         = activation,
         bias_initializer   = bias_init,
         use_bias           = bias_use,
         kernel_regularizer = kern_reg
     ))
     
+    model.add(Dropout(keep_rate))
+    
     
     ######################################################################################
+    # Hidden Layer
     ######################################################################################
+    
+    model.add(Dense(
+        inputDim,
+        activation         = activation,
+        bias_initializer   = bias_init,
+        use_bias           = bias_use,
+        kernel_regularizer = kern_reg
+    ))
     
     model.add(Dropout(keep_rate))
     
-   
+
+    ######################################################################################
+    # Hidden Layer
+    ######################################################################################
+    
+    model.add(Dense(
+        int(inputDim/2),
+        activation         = activation,
+        bias_initializer   = bias_init,
+        use_bias           = bias_use,
+        kernel_regularizer = kern_reg
+    ))
+    
+    model.add(Dropout(keep_rate))
+    
+    
+    ######################################################################################
+    # Hidden Layer
+    ######################################################################################
+    
+    model.add(Dense(
+        int(inputDim/4),
+        activation         = activation,
+        bias_initializer   = bias_init,
+        use_bias           = bias_use,
+        kernel_regularizer = kern_reg
+    ))
+    
+    model.add(Dropout(keep_rate))
+    
+
+
+
+
     ######################################################################################
     # Output Layer
     ######################################################################################
