@@ -4,28 +4,49 @@
 import sys
 import glob
 import os.path
+import time
 
 import numpy as np
 import pandas as pd
+import skimage.measure as skimgmeas
 
 from IPython.display import clear_output
 from IPython.display import display
 
 sys.path.append(os.path.abspath("../../"))
 from pax_utils import waveform_utils
+from pax_utils import performance_utils
 
 
 ####################################################################################################
 ####################################################################################################
 
-def get_data(df_events, s2_window_max):
+def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
  
+    ####################################################################################################
+    ####################################################################################################
+
+    if (s2_window_max % resample_factor != 0):
+
+        print(s2_window_max)
+        print(resample_factor)
+    
+    assert(s2_window_max % resample_factor == 0)
+
+    resample                = False
+    s2_window_max_resampled = s2_window_max
+    
+    if (resample_factor > 1):
+
+        resample                = True
+        s2_window_max_resampled = s2_window_max / resample_factor
+        
+    
     ####################################################################################################
     # Input directory - containing S2 waveforms for all top channels
     ####################################################################################################
     
-    dir_input_s2    = "../../pax_merge/merged/waveforms_test/s2"
-    dir_format_s2   = dir_input_s2 + '/' + 'event' + ('[0-9]' * 4) + '_S2waveforms.pkl'
+    dir_format_s2   = dir_input_s2 + '/' + 'event' + ('[0-9]' * 6) + '_S2waveforms.pkl'
     lst_contents_s2 = glob.glob(dir_format_s2)
     lst_events      = df_events['event_number'].as_matrix().tolist()
     
@@ -35,7 +56,6 @@ def get_data(df_events, s2_window_max):
     # Truth data shape: (1, 2)
     ####################################################################################################
     
-    #nEvents    = len(lst_contents_s2)
     nEvents    = len(df_events.index)
     n_channels = 127
     
@@ -43,13 +63,17 @@ def get_data(df_events, s2_window_max):
     ####################################################################################################
     ####################################################################################################
         
-    train_data        = np.zeros((nEvents, s2_window_max*n_channels))
-    train_truth       = np.zeros((nEvents, 2))
+    train_data           = np.zeros((nEvents, s2_window_max*n_channels))
+    train_data_resampled = np.zeros((nEvents, s2_window_max_resampled*n_channels))
+    train_truth          = np.zeros((nEvents, 2))
     
-    #event_train_data  = np.zeros(s2_window_max)
     event_train_truth = np.zeros(2)
 
-                             
+                   
+     
+    #return train_data, train_truth
+    
+    
     ####################################################################################################
     # Loop over events
     ####################################################################################################
@@ -60,25 +84,14 @@ def get_data(df_events, s2_window_max):
 
     for iEvent, event_num in enumerate(lst_events):
         
+        t0 = time.time()
         
         ################################################################################################
         # Get Event Information
         ################################################################################################
         
-        #event_num = int(os.path.basename(infile).split("_")[0].replace("event", ""))
-        
-        #event_num = iEvent
-        infile    = dir_input_s2 + '/event' + format(event_num, '04d') + '_S2waveforms.pkl'
+        infile    = dir_input_s2 + '/event' + format(event_num, '06d') + '_S2waveforms.pkl'
 
-        #print(iEvent)
-        #print(infile)
-        
-        #if (iEvent > 3):
-            
-        #    break
-            
-        #continue
-        
         
         ################################################################################################
         ################################################################################################
@@ -91,13 +104,7 @@ def get_data(df_events, s2_window_max):
         intr_count      = df_event.loc['intr_count'     ]
         x_true          = df_event.loc['x'              ]
         y_true          = df_event.loc['y'              ]
-       
      
-        print(" -> Event Index, Event Number: " + str(iEvent) + ", " + str(event_num))
-        clear_output(wait=True)
-        
-        #display(events_df[0:1][0:10])
-        #break
         
         ################################################################################################
         ################################################################################################
@@ -129,7 +136,9 @@ def get_data(df_events, s2_window_max):
             channel_integral = row['sum']
             channel_raw_data = row['raw_data']
         
-            assert(channel_length == channel_raw_data.size)
+            if (row['raw_data'] is not None):
+                
+                assert(channel_length == row['raw_data'].size)
             
                  
             ############################################################################################
@@ -185,9 +194,55 @@ def get_data(df_events, s2_window_max):
             
             train_data[iEvent, i0:i1] = arr_channel_padded
         
-            #print(arr_channel_padded.shape)
+
+            ############################################################################################
+            ############################################################################################
+            
+            if (resample):
                 
-                  
+                arr_resampled = skimgmeas.block_reduce(arr_channel_padded, block_size=(resample_factor,), func=np.sum)
+                
+                i0_r = iChannel*s2_window_max_resampled
+                i1_r = i0_r + s2_window_max_resampled
+               
+                #print("Resampled by factor: " + str(resample_factor))
+                #print(arr_resampled.shape)
+                #print(train_data_resampled.shape)
+                
+                train_data_resampled[iEvent, i0_r:i1_r] = arr_resampled
+            
+            
+                ########################################################################################
+                ########################################################################################
+            
+                if (resample_factor == s2_window_max):
+                
+                    str_chan   = 's2_area_%03d' % iChannel
+                    
+                    s2integral_df  = df_event[:][str_chan].astype('float32')
+                    s2integral_arr = arr_resampled[0].astype('float32')
+                        
+                    assert(arr_resampled.size == 1)
+                    
+                    relerr = abs(s2integral_df - s2integral_arr)
+                    
+                    if (relerr > 0):
+                        
+                        relerr /= s2integral_df
+                        
+                    eq = relerr < 0.1
+                    
+                    if (not eq):
+                     
+                        print()
+                        print(event_num)
+                        print(s2integral_df)
+                        print(s2integral_arr)
+                        print(relerr)
+
+                    #assert(eq)
+                
+                
             ############################################################################################
             # End loop over channels
             ############################################################################################
@@ -239,14 +294,30 @@ def get_data(df_events, s2_window_max):
         # End loop over events
         ################################################################################################
     
+        t1 = time.time()
+    
+        performance_utils.time_event(iEvent, event_num, t1 - t0)
+        
         continue
 
         
     ####################################################################################################
     ####################################################################################################
 
+    print()
     print(str(nEmpty) + " empty events")
-
+    print()
+    print("Input shape:     " + str(train_data.shape))
+    print("Resampled shape: " + str(train_data_resampled.shape))
+    
+          
+    ####################################################################################################
+    ####################################################################################################
+    
+    if (resample):
+        
+        return train_data_resampled, train_truth
+        
     return train_data, train_truth
 
 
@@ -259,13 +330,13 @@ def getEventsDataFrame(input_path):
     ################################################################################################
 
     events_df = pd.read_pickle(input_path)
-    events_df = events_df[events_df['intr_count'] > 0] 
+    #events_df = events_df[events_df['intr_count'] == 1] 
 
     
     ################################################################################################
     ################################################################################################
     
-    arr_s2_right_minus_left = (events_df['event_s2_right']- events_df['event_s2_left']).as_matrix()
+    arr_s2_right_minus_left = (events_df['event_s2_right'] - events_df['event_s2_left']).as_matrix()
     arr_s2_length           =  events_df['event_s2_length'].as_matrix()  
     
     s2_window_max = np.amax(arr_s2_right_minus_left) + 1
