@@ -160,16 +160,6 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
 
             arr_temp[i0:i1] = np.array(arr_channel_padded, copy=True)
             
-            #continue
-            
-            #train_data[iEvent, i0:i1] = np.array(arr_channel_padded, copy=True)
-            #train_data[iEvent][i0:i1] = np.copy(arr_channel_padded)
-            #np.copyto(arr_channel_padded, train_data[iEvent:iEvent+1, i0:i1])
-            
-            #continue
-
-            
-            
             
             ############################################################################################
             ############################################################################################
@@ -181,8 +171,6 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
                 i0_r = iChannel * s2_window_max_resampled
                 i1_r = i0_r     + s2_window_max_resampled
                
-                #train_data_resampled[iEvent, i0_r:i1_r] = arr_resampled
-        
                 arr_temp_resampled[i0_r : i1_r] = np.array(arr_resampled, copy=True)
 
             
@@ -202,8 +190,6 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
         # End loop over channels
         ################################################################################################
         
-        gc.collect()
-        
         t1 = time.time()
         performance_utils.time_event(iEvent, event_num, t1 - t0)
         
@@ -218,18 +204,12 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
         
         train_data[iEvent]           = np.array(arr_temp          , copy=True)
         train_data_resampled[iEvent] = np.array(arr_temp_resampled, copy=True)
-    
         
         #continue
         
         
-
-
-        
         ################################################################################################
-        # End loop over channels
         ################################################################################################
-        
         
         if (resample_factor == s2_window_max):
         
