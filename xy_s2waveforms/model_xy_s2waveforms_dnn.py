@@ -31,7 +31,7 @@ def dnnModel(
 
     inputDim = n_timesteps*n_channels
     
-    name = 'model_xy_s2waveforms_dnn_' + activation + '_in%04d' % inputDim + '_out%01d' % n_outputs
+    name = 'model_xy_s2waveforms_dnn_' + activation #+ '_in%04d' % inputDim + '_out%01d' % n_outputs
 
     reg_scale  = 0.00100 # possibly bad
     bias_init  = 'zeros'
