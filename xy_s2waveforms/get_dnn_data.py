@@ -21,77 +21,7 @@ from pax_utils import performance_utils
 from pax_utils import s1s2_utils
 from pax_utils import numeric_utils
 
-    
-####################################################################################################
-####################################################################################################
 
-def get_padded_array(
-    ser_channel,
-    s2_window_max,
-    event_s2_left,
-    event_s2_right,
-    event_s2_length):
- 
-    channel          = ser_channel['channel']
-    channel_left     = ser_channel['left']
-    channel_right    = ser_channel['right']
-    channel_length   = ser_channel['length']
-    channel_integral = ser_channel['sum']
-    channel_raw_data = ser_channel['raw_data']
-    
-    if (ser_channel['raw_data'] is not None):
-        
-        assert(channel_length == ser_channel['raw_data'].size)
-
-        
-    ############################################################################################
-    # Pad the S2 array for all channels in the event
-    ############################################################################################
-    
-    arr_channel        = np.zeros(event_s2_length)
-    arr_channel_padded = np.zeros(s2_window_max)
-    
-    if (channel_length > 0):
-        
-        ############################################################################################
-        ############################################################################################
-        
-        channel_left_offset  = channel_left   - event_s2_left
-        channel_right_offset = event_s2_right - channel_right
-        
-        assert(channel_left    >= event_s2_left )
-        assert(channel_right   <= event_s2_right)
-        assert(event_s2_length == channel_left_offset + channel_length + channel_right_offset  )
-    
-        arr_channel[channel_left_offset : channel_left_offset + channel_length] = channel_raw_data  
-        
-        assert( abs(channel_integral - np.sum(arr_channel)) < 1e-4 )
-        
-        #channel_length       = channel_left_offset + channel_length + channel_right_offset
-        #print()
-        #print("s2 window all chan:   " + str(event_s2_length))
-        #print("channel length:       " + str(channel_length))
-        #print("channel left offset:  " + str(channel_left_offset))
-        #print("channel right offset: " + str(channel_right_offset))
-        #print("event:       " + str(event_num)      )
-        #print("left chan:   " + str(channel_left)       )
-        #print("left evt:    " + str(event_s2_left)  )
-        #print("right chan:  " + str(channel_right)      )
-        #print("right evt:   " + str(event_s2_right) )
-        #print("length chan: " + str(channel_length)     )
-        #print("length evt:  " + str(event_s2_length))
-    
-    
-    ############################################################################################
-    # Pad to the widest S2 over all events
-    ############################################################################################
-        
-    arr_channel_padded                       = np.zeros(s2_window_max)
-    arr_channel_padded[0 : arr_channel.size] = arr_channel
-    
-    return np.array(arr_channel_padded)
-
-    
 ####################################################################################################
 ####################################################################################################
 
@@ -219,18 +149,20 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
                
             
             ############################################################################################
+            # memory grows here
             ############################################################################################
             
             i0 = iChannel * s2_window_max
             i1 = i0       + s2_window_max
 
-            #continue
+            continue
             
-            # memory grows here
             train_data[iEvent, i0:i1] = np.copy(arr_channel_padded)
-        
+
+            #train_data[iEvent][i0:i1] = np.copy(arr_channel_padded)
+            #np.copyto(arr_channel_padded, train_data[iEvent:iEvent+1, i0:i1])
             
-            #continue
+            continue
 
             
             
@@ -250,6 +182,8 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
                 #print(train_data_resampled.shape)
                 
                 train_data_resampled[iEvent, i0_r:i1_r] = arr_resampled
+        
+                gc.collect()
             
 
                 
@@ -361,6 +295,76 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
         return train_data_resampled, train_truth
         
     return train_data, train_truth
+
+    
+####################################################################################################
+####################################################################################################
+
+def get_padded_array(
+    ser_channel,
+    s2_window_max,
+    event_s2_left,
+    event_s2_right,
+    event_s2_length):
+ 
+    channel          = ser_channel['channel']
+    channel_left     = ser_channel['left']
+    channel_right    = ser_channel['right']
+    channel_length   = ser_channel['length']
+    channel_integral = ser_channel['sum']
+    channel_raw_data = ser_channel['raw_data']
+    
+    if (ser_channel['raw_data'] is not None):
+        
+        assert(channel_length == ser_channel['raw_data'].size)
+
+        
+    ############################################################################################
+    # Pad the S2 array for all channels in the event
+    ############################################################################################
+    
+    arr_channel        = np.zeros(event_s2_length)
+    arr_channel_padded = np.zeros(s2_window_max)
+    
+    if (channel_length > 0):
+        
+        ############################################################################################
+        ############################################################################################
+        
+        channel_left_offset  = channel_left   - event_s2_left
+        channel_right_offset = event_s2_right - channel_right
+        
+        assert(channel_left    >= event_s2_left )
+        assert(channel_right   <= event_s2_right)
+        assert(event_s2_length == channel_left_offset + channel_length + channel_right_offset  )
+    
+        arr_channel[channel_left_offset : channel_left_offset + channel_length] = np.copy(channel_raw_data)  
+        
+        assert( abs(channel_integral - np.sum(arr_channel)) < 1e-4 )
+        
+        #channel_length       = channel_left_offset + channel_length + channel_right_offset
+        #print()
+        #print("s2 window all chan:   " + str(event_s2_length))
+        #print("channel length:       " + str(channel_length))
+        #print("channel left offset:  " + str(channel_left_offset))
+        #print("channel right offset: " + str(channel_right_offset))
+        #print("event:       " + str(event_num)      )
+        #print("left chan:   " + str(channel_left)       )
+        #print("left evt:    " + str(event_s2_left)  )
+        #print("right chan:  " + str(channel_right)      )
+        #print("right evt:   " + str(event_s2_right) )
+        #print("length chan: " + str(channel_length)     )
+        #print("length evt:  " + str(event_s2_length))
+    
+    
+    ############################################################################################
+    # Pad to the widest S2 over all events
+    ############################################################################################
+        
+    arr_channel_padded                       = np.zeros(s2_window_max)
+    arr_channel_padded[0 : arr_channel.size] = np.copy(arr_channel)
+    
+    return np.array(arr_channel_padded)
 
 
 ####################################################################################################
