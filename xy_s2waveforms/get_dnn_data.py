@@ -191,11 +191,10 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
         # Get S2 waveforms for top channels
         ################################################################################################
 
+        df_s2waveforms = pd.DataFrame()
+        
         #df_s2waveforms = pd.read_pickle(infile)
         #df_s2waveforms = waveform_utils.addEmptyChannelsToDataFrame(df_s2waveforms)
-
-        
-        df_s2waveforms = pd.DataFrame()
         
         with open(infile, "rb") as f:
             df_s2waveforms = pickle.load(f)
@@ -208,63 +207,9 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
         
         for iChannel, row in df_s2waveforms.iterrows():
             
-            #channel          = row['channel']
-            #channel_left     = row['left']
-            #channel_right    = row['right']
-            #channel_length   = row['length']
-            #channel_integral = row['sum']
-            #channel_raw_data = row['raw_data']
-        #
-            #if (row['raw_data'] is not None):
-            #    
-            #    assert(channel_length == row['raw_data'].size)
-            #
-                 
-            #############################################################################################
-            ## Pad the S2 array for all channels in the event
-            #############################################################################################
-            #
-            #arr_channel = np.zeros(event_s2_length)
-            ##arr_channel *= 0
-#
-            #
-            #if (channel_length > 0):
-            #    
-            #    channel_left_offset  = channel_left   - event_s2_left
-            #    channel_right_offset = event_s2_right - channel_right
-            #    
-            #    #channel_length       = channel_left_offset + channel_length + channel_right_offset
-            #    #print()
-            #    #print("s2 window all chan:   " + str(event_s2_length))
-            #    #print("channel length:       " + str(channel_length))
-            #    #print("channel left offset:  " + str(channel_left_offset))
-            #    #print("channel right offset: " + str(channel_right_offset))
-            #    #print("event:       " + str(event_num)      )
-            #    #print("left chan:   " + str(channel_left)       )
-            #    #print("left evt:    " + str(event_s2_left)  )
-            #    #print("right chan:  " + str(channel_right)      )
-            #    #print("right evt:   " + str(event_s2_right) )
-            #    #print("length chan: " + str(channel_length)     )
-            #    #print("length evt:  " + str(event_s2_length))
-            #
-            #
-            #    assert(channel_left    >= event_s2_left )
-            #    assert(channel_right   <= event_s2_right)
-            #    assert(event_s2_length == channel_left_offset + channel_length + channel_right_offset  )
-#
-            #    arr_channel[channel_left_offset : channel_left_offset + channel_length] = channel_raw_data  
-            #    
-            #    assert( abs(channel_integral - np.sum(arr_channel)) < 1e-4 )
-    #
-            #
-            #############################################################################################
-            ## Pad to the widest S2 over all events
-            #############################################################################################
-            #    
-            #arr_channel_padded                       = np.zeros(s2_window_max)
-            #arr_channel_padded[0 : arr_channel.size] = arr_channel
-#
-
+            ############################################################################################
+            ############################################################################################
+    
             arr_channel_padded = get_padded_array(
                 pd.Series.copy(row, deep=True),
                 s2_window_max,
