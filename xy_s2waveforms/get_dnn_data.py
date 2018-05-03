@@ -2,8 +2,10 @@
 ####################################################################################################
 
 import sys
+import gc
 import glob
 import os.path
+import pickle
 import time
 
 import numpy as np
@@ -19,7 +21,77 @@ from pax_utils import performance_utils
 from pax_utils import s1s2_utils
 from pax_utils import numeric_utils
 
+    
+####################################################################################################
+####################################################################################################
 
+def get_padded_array(
+    ser_channel,
+    s2_window_max,
+    event_s2_left,
+    event_s2_right,
+    event_s2_length):
+ 
+    channel          = ser_channel['channel']
+    channel_left     = ser_channel['left']
+    channel_right    = ser_channel['right']
+    channel_length   = ser_channel['length']
+    channel_integral = ser_channel['sum']
+    channel_raw_data = ser_channel['raw_data']
+    
+    if (ser_channel['raw_data'] is not None):
+        
+        assert(channel_length == ser_channel['raw_data'].size)
+
+        
+    ############################################################################################
+    # Pad the S2 array for all channels in the event
+    ############################################################################################
+    
+    arr_channel        = np.zeros(event_s2_length)
+    arr_channel_padded = np.zeros(s2_window_max)
+    
+    if (channel_length > 0):
+        
+        ############################################################################################
+        ############################################################################################
+        
+        channel_left_offset  = channel_left   - event_s2_left
+        channel_right_offset = event_s2_right - channel_right
+        
+        assert(channel_left    >= event_s2_left )
+        assert(channel_right   <= event_s2_right)
+        assert(event_s2_length == channel_left_offset + channel_length + channel_right_offset  )
+    
+        arr_channel[channel_left_offset : channel_left_offset + channel_length] = channel_raw_data  
+        
+        assert( abs(channel_integral - np.sum(arr_channel)) < 1e-4 )
+        
+        #channel_length       = channel_left_offset + channel_length + channel_right_offset
+        #print()
+        #print("s2 window all chan:   " + str(event_s2_length))
+        #print("channel length:       " + str(channel_length))
+        #print("channel left offset:  " + str(channel_left_offset))
+        #print("channel right offset: " + str(channel_right_offset))
+        #print("event:       " + str(event_num)      )
+        #print("left chan:   " + str(channel_left)       )
+        #print("left evt:    " + str(event_s2_left)  )
+        #print("right chan:  " + str(channel_right)      )
+        #print("right evt:   " + str(event_s2_right) )
+        #print("length chan: " + str(channel_length)     )
+        #print("length evt:  " + str(event_s2_length))
+    
+    
+    ############################################################################################
+    # Pad to the widest S2 over all events
+    ############################################################################################
+        
+    arr_channel_padded                       = np.zeros(s2_window_max)
+    arr_channel_padded[0 : arr_channel.size] = arr_channel
+    
+    return np.array(arr_channel_padded)
+
+    
 ####################################################################################################
 ####################################################################################################
 
@@ -68,12 +140,8 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
     train_data           = np.zeros((nEvents, s2_window_max*n_channels))
     train_data_resampled = np.zeros((nEvents, s2_window_max_resampled*n_channels))
     train_truth          = np.zeros((nEvents, 2))
-    
-    event_train_truth = np.zeros(2)
+    event_train_truth    = np.zeros(2)
 
-                   
-     
-    #return train_data, train_truth
     
     
     ####################################################################################################
@@ -81,10 +149,11 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
     ####################################################################################################
     
     nEmpty = 0
-    
     iIndex = 0
 
     for iEvent, event_num in enumerate(lst_events):
+        
+        gc.collect()
         
         t0 = time.time()
         
@@ -92,7 +161,7 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
         # Get Event Information
         ################################################################################################
         
-        infile    = dir_input_s2 + '/event' + format(event_num, '06d') + '_S2waveforms.pkl'
+        infile = dir_input_s2 + '/event' + format(event_num, '06d') + '_S2waveforms.pkl'
 
         
         ################################################################################################
@@ -106,7 +175,7 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
         intr_count      = df_event.loc['intr_count'     ]
         x_true          = df_event.loc['x'              ]
         y_true          = df_event.loc['y'              ]
-     
+    
         
         ################################################################################################
         ################################################################################################
@@ -121,82 +190,106 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
         ################################################################################################
         # Get S2 waveforms for top channels
         ################################################################################################
+
+        #df_s2waveforms = pd.read_pickle(infile)
+        #df_s2waveforms = waveform_utils.addEmptyChannelsToDataFrame(df_s2waveforms)
+
         
-        df_s2waveforms = pd.read_pickle(infile)
-        df_s2waveforms = waveform_utils.addEmptyChannelsToDataFrame(df_s2waveforms)
+        df_s2waveforms = pd.DataFrame()
+        
+        with open(infile, "rb") as f:
+            df_s2waveforms = pickle.load(f)
+            df_s2waveforms = waveform_utils.addEmptyChannelsToDataFrame(df_s2waveforms)
+            f.close()
     
-        
+
         ################################################################################################
         ################################################################################################
         
         for iChannel, row in df_s2waveforms.iterrows():
             
-            channel          = row['channel']
-            channel_left     = row['left']
-            channel_right    = row['right']
-            channel_length   = row['length']
-            channel_integral = row['sum']
-            channel_raw_data = row['raw_data']
-        
-            if (row['raw_data'] is not None):
-                
-                assert(channel_length == row['raw_data'].size)
-            
+            #channel          = row['channel']
+            #channel_left     = row['left']
+            #channel_right    = row['right']
+            #channel_length   = row['length']
+            #channel_integral = row['sum']
+            #channel_raw_data = row['raw_data']
+        #
+            #if (row['raw_data'] is not None):
+            #    
+            #    assert(channel_length == row['raw_data'].size)
+            #
                  
-            ############################################################################################
-            # Pad the S2 array for all channels in the event
-            ############################################################################################
-            
-            arr_channel = np.zeros(event_s2_length)
-            
-            if (channel_length > 0):
-                
-                channel_left_offset  = channel_left   - event_s2_left
-                channel_right_offset = event_s2_right - channel_right
-                #channel_length       = channel_left_offset + channel_length + channel_right_offset
-                
-                #print()
-                #print("s2 window all chan:   " + str(event_s2_length))
-                #print("channel length:       " + str(channel_length))
-                #print("channel left offset:  " + str(channel_left_offset))
-                #print("channel right offset: " + str(channel_right_offset))
-                
+            #############################################################################################
+            ## Pad the S2 array for all channels in the event
+            #############################################################################################
+            #
+            #arr_channel = np.zeros(event_s2_length)
+            ##arr_channel *= 0
+#
+            #
+            #if (channel_length > 0):
+            #    
+            #    channel_left_offset  = channel_left   - event_s2_left
+            #    channel_right_offset = event_s2_right - channel_right
+            #    
+            #    #channel_length       = channel_left_offset + channel_length + channel_right_offset
+            #    #print()
+            #    #print("s2 window all chan:   " + str(event_s2_length))
+            #    #print("channel length:       " + str(channel_length))
+            #    #print("channel left offset:  " + str(channel_left_offset))
+            #    #print("channel right offset: " + str(channel_right_offset))
+            #    #print("event:       " + str(event_num)      )
+            #    #print("left chan:   " + str(channel_left)       )
+            #    #print("left evt:    " + str(event_s2_left)  )
+            #    #print("right chan:  " + str(channel_right)      )
+            #    #print("right evt:   " + str(event_s2_right) )
+            #    #print("length chan: " + str(channel_length)     )
+            #    #print("length evt:  " + str(event_s2_length))
+            #
+            #
+            #    assert(channel_left    >= event_s2_left )
+            #    assert(channel_right   <= event_s2_right)
+            #    assert(event_s2_length == channel_left_offset + channel_length + channel_right_offset  )
+#
+            #    arr_channel[channel_left_offset : channel_left_offset + channel_length] = channel_raw_data  
+            #    
+            #    assert( abs(channel_integral - np.sum(arr_channel)) < 1e-4 )
+    #
+            #
+            #############################################################################################
+            ## Pad to the widest S2 over all events
+            #############################################################################################
+            #    
+            #arr_channel_padded                       = np.zeros(s2_window_max)
+            #arr_channel_padded[0 : arr_channel.size] = arr_channel
+#
 
-                #print("event:       " + str(event_num)      )
-                #print("left chan:   " + str(channel_left)       )
-                #print("left evt:    " + str(event_s2_left)  )
-                #print("right chan:  " + str(channel_right)      )
-                #print("right evt:   " + str(event_s2_right) )
-                #print("length chan: " + str(channel_length)     )
-                #print("length evt:  " + str(event_s2_length))
+            arr_channel_padded = get_padded_array(
+                pd.Series.copy(row, deep=True),
+                s2_window_max,
+                event_s2_left,
+                event_s2_right,
+                event_s2_length)
+               
             
+            ############################################################################################
+            ############################################################################################
             
-                assert(channel_left    >= event_s2_left )
-                assert(channel_right   <= event_s2_right)
-                assert(event_s2_length == channel_left_offset + channel_length + channel_right_offset  )
+            i0 = iChannel * s2_window_max
+            i1 = i0       + s2_window_max
 
-                arr_channel[channel_left_offset : channel_left_offset + channel_length] = channel_raw_data  
-                
-                assert( abs(channel_integral - np.sum(arr_channel)) < 1e-4 )
-    
+            #continue
             
-            ############################################################################################
-            # Pad to the widest S2 over all events
-            ############################################################################################
-                
-            arr_channel_padded                       = np.zeros(s2_window_max)
-            arr_channel_padded[0 : arr_channel.size] = arr_channel
-            
-             
-            ############################################################################################
-            ############################################################################################
-            
-            i0 = iChannel*s2_window_max
-            i1 = i0 + s2_window_max
-            
-            train_data[iEvent, i0:i1] = arr_channel_padded
+            # memory grows here
+            train_data[iEvent, i0:i1] = np.copy(arr_channel_padded)
         
+            
+            #continue
 
+            
+            
+            
             ############################################################################################
             ############################################################################################
             
@@ -213,43 +306,23 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
                 
                 train_data_resampled[iEvent, i0_r:i1_r] = arr_resampled
             
-            
-                ########################################################################################
-                ########################################################################################
-            
-                #if (resample_factor == s2_window_max):
-                #
-                #    str_chan   = 's2_area_%03d' % iChannel
-                #    
-                #    s2integral_df  = df_event[:][str_chan].astype('float32')
-                #    s2integral_arr = arr_resampled[0].astype('float32')
-                #        
-                #    assert(arr_resampled.size == 1)
-                #    
-                #    relerr = abs(s2integral_df - s2integral_arr)
-                #    
-                #    if (relerr > 0):
-                #        
-                #        relerr /= s2integral_df
-                #        
-                #    eq = relerr < 0.1
-                #    
-                #    if (not eq):
-                #     
-                #        print()
-                #        print("event:        " + str(event_num))
-                #        print("df integral:  " + str(s2integral_df))
-                #        print("arr integral: " + str(s2integral_arr))
-                #        print("err:          " + str(relerr))
-#
-                #    #assert(eq)
-                
+
                 
             ############################################################################################
             ############################################################################################
             
             continue
     
+    
+        ################################################################################################
+        ################################################################################################
+        
+        t1 = time.time()
+        performance_utils.time_event(iEvent, event_num, t1 - t0)
+        
+        #continue
+        
+        
         
         ################################################################################################
         # End loop over channels
