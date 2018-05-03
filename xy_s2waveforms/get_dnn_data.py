@@ -71,7 +71,9 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
     train_data_resampled = np.zeros((nEvents, s2_window_max_resampled*n_channels))
     train_truth          = np.zeros((nEvents, 2))
     event_train_truth    = np.zeros(2)
-
+    
+    arr_temp             = np.zeros(s2_window_max*n_channels)
+    arr_temp_resampled   = np.zeros(s2_window_max_resampled*n_channels)
     
     
     ####################################################################################################
@@ -135,6 +137,7 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
         ################################################################################################
         ################################################################################################
         
+        
         for iChannel, row in df_s2waveforms.iterrows():
             
             ############################################################################################
@@ -155,14 +158,15 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
             i0 = iChannel * s2_window_max
             i1 = i0       + s2_window_max
 
-            continue
+            arr_temp[i0:i1] = np.array(arr_channel_padded, copy=True)
             
-            train_data[iEvent, i0:i1] = np.copy(arr_channel_padded)
-
+            #continue
+            
+            #train_data[iEvent, i0:i1] = np.array(arr_channel_padded, copy=True)
             #train_data[iEvent][i0:i1] = np.copy(arr_channel_padded)
             #np.copyto(arr_channel_padded, train_data[iEvent:iEvent+1, i0:i1])
             
-            continue
+            #continue
 
             
             
@@ -174,34 +178,53 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
                 
                 arr_resampled = skimgmeas.block_reduce(arr_channel_padded, block_size=(resample_factor,), func=np.sum)
                 
-                i0_r = iChannel*s2_window_max_resampled
-                i1_r = i0_r + s2_window_max_resampled
+                i0_r = iChannel * s2_window_max_resampled
+                i1_r = i0_r     + s2_window_max_resampled
                
+                #train_data_resampled[iEvent, i0_r:i1_r] = arr_resampled
+        
+                arr_temp_resampled[i0_r : i1_r] = np.array(arr_resampled, copy=True)
+
+            
                 #print("Resampled by factor: " + str(resample_factor))
                 #print(arr_resampled.shape)
-                #print(train_data_resampled.shape)
-                
-                train_data_resampled[iEvent, i0_r:i1_r] = arr_resampled
-        
-                gc.collect()
-            
+                #print(train_data_resampled.shape)            
 
                 
+                
             ############################################################################################
             ############################################################################################
-            
+
             continue
     
     
         ################################################################################################
+        # End loop over channels
         ################################################################################################
+        
+        gc.collect()
         
         t1 = time.time()
         performance_utils.time_event(iEvent, event_num, t1 - t0)
         
+        
+        ################################################################################################
+        # memory grows here
+        ################################################################################################
+        
+        #continue
+        
+        assert(train_data.shape[1] == arr_temp.size)
+        
+        train_data[iEvent]           = np.array(arr_temp          , copy=True)
+        train_data_resampled[iEvent] = np.array(arr_temp_resampled, copy=True)
+    
+        
         #continue
         
         
+
+
         
         ################################################################################################
         # End loop over channels
