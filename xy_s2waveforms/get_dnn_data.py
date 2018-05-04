@@ -67,13 +67,12 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
     ####################################################################################################
     ####################################################################################################
         
-    train_data           = np.zeros((nEvents, s2_window_max*n_channels))
-    train_data_resampled = np.zeros((nEvents, s2_window_max_resampled*n_channels))
-    train_truth          = np.zeros((nEvents, 2))
-    event_train_truth    = np.zeros(2)
-    
-    arr_temp             = np.zeros(s2_window_max*n_channels)
-    arr_temp_resampled   = np.zeros(s2_window_max_resampled*n_channels)
+    train_data           = np.zeros((nEvents, s2_window_max*n_channels)          , dtype ='float32')
+    train_data_resampled = np.zeros((nEvents, s2_window_max_resampled*n_channels), dtype ='float32')
+    train_truth          = np.zeros((nEvents, 2)                                 , dtype ='float32')
+    event_train_truth    = np.zeros(2                                            , dtype ='float32')
+    arr_temp             = np.zeros(s2_window_max*n_channels                     , dtype ='float32')
+    arr_temp_resampled   = np.zeros(s2_window_max_resampled*n_channels           , dtype ='float32')
     
     
     ####################################################################################################
@@ -190,8 +189,8 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
         # End loop over channels
         ################################################################################################
         
-        t1 = time.time()
-        performance_utils.time_event(iEvent, event_num, t1 - t0)
+        #t1 = time.time()
+        #performance_utils.time_event(iEvent, event_num, t1 - t0)
         
         
         ################################################################################################
@@ -326,8 +325,8 @@ def get_padded_array(
     # Pad the S2 array for all channels in the event
     ############################################################################################
     
-    arr_channel        = np.zeros(event_s2_length)
-    arr_channel_padded = np.zeros(s2_window_max)
+    arr_channel        = np.zeros(event_s2_length, dtype ='float32')
+    arr_channel_padded = np.zeros(s2_window_max  , dtype ='float32')
     
     if (channel_length > 0):
         
@@ -341,7 +340,7 @@ def get_padded_array(
         assert(channel_right   <= event_s2_right)
         assert(event_s2_length == channel_left_offset + channel_length + channel_right_offset  )
     
-        arr_channel[channel_left_offset : channel_left_offset + channel_length] = np.copy(channel_raw_data)  
+        arr_channel[channel_left_offset : channel_left_offset + channel_length] = channel_raw_data
         
         assert( abs(channel_integral - np.sum(arr_channel)) < 1e-4 )
         
@@ -364,8 +363,8 @@ def get_padded_array(
     # Pad to the widest S2 over all events
     ############################################################################################
         
-    arr_channel_padded                       = np.zeros(s2_window_max)
-    arr_channel_padded[0 : arr_channel.size] = np.copy(arr_channel)
+    arr_channel_padded                       = np.zeros(s2_window_max, dtype ='float32')
+    arr_channel_padded[0 : arr_channel.size] = arr_channel
     
     return np.array(arr_channel_padded)
 

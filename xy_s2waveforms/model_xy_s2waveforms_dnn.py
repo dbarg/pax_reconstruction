@@ -63,34 +63,34 @@ def dnnModel(
     model.add(Dropout(keep_rate))
     
       
-    ######################################################################################
-    # Hidden Layer
-    ######################################################################################
-    
-    model.add(Dense(
-        int(inputDim/2),
-        activation         = activation,
-        bias_initializer   = bias_init,
-        use_bias           = bias_use,
-        kernel_regularizer = kern_reg
-    ))
-    
-    model.add(Dropout(keep_rate))
-     
-            
-    ######################################################################################
-    # Hidden Layer
-    ######################################################################################
-    
-    model.add(Dense(
-        int(inputDim/4),
-        activation         = activation,
-        bias_initializer   = bias_init,
-        use_bias           = bias_use,
-        kernel_regularizer = kern_reg
-    ))
-    
-    model.add(Dropout(keep_rate))
+    #######################################################################################
+    ## Hidden Layer
+    #######################################################################################
+    #
+    #model.add(Dense(
+    #    int(inputDim/2),
+    #    activation         = activation,
+    #    bias_initializer   = bias_init,
+    #    use_bias           = bias_use,
+    #    kernel_regularizer = kern_reg
+    #))
+    #
+    #model.add(Dropout(keep_rate))
+    # 
+    #        
+    #######################################################################################
+    ## Hidden Layer
+    #######################################################################################
+    #
+    #model.add(Dense(
+    #    int(inputDim/4),
+    #    activation         = activation,
+    #    bias_initializer   = bias_init,
+    #    use_bias           = bias_use,
+    #    kernel_regularizer = kern_reg
+    #))
+    #
+    #model.add(Dropout(keep_rate))
     
     
         
