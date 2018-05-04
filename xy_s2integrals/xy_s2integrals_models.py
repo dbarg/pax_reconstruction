@@ -22,7 +22,7 @@ def xy_s2integrals_dnnModel(activation='elu', keep_rate=0.00005):
     ######################################################################################
     ######################################################################################
     
-    name = 'xy_s2integrals_dnnModel_' + activation
+    name = 'xy_s2integrals_dnn_' + activation
     
     
     ######################################################################################
@@ -42,71 +42,46 @@ def xy_s2integrals_dnnModel(activation='elu', keep_rate=0.00005):
     ######################################################################################
     
     model = Sequential()
-    model.add(Dense(inputDim, input_dim=inputDim))
+    
+    #model.add(Dense(inputDim, input_dim=inputDim))
+    model.add(Dense(inputDim, input_dim=inputDim, activation = activation))
     
     
     ######################################################################################
-    # Hidden Layer
     ######################################################################################
     
-    model.add(Dense(
-        inputDim*4,
-        activation         = activation,
-        bias_initializer   = bias_init,
-        use_bias           = bias_use,
-        kernel_regularizer = kern_reg
-    ))
-    
-    model.add(Dropout(keep_rate))
-    
-    
-    ######################################################################################
-    # Hidden Layer
-    ######################################################################################
-    
-    model.add(Dense(
-        inputDim,
-        activation         = activation,
-        bias_initializer   = bias_init,
-        use_bias           = bias_use,
-        kernel_regularizer = kern_reg
-    ))
-    
-    model.add(Dropout(keep_rate))
-    
+    #hidden_layers = [inputDim*4, inputDim, inputDim/2, inputDim/4] # 1.08, 
+    #hidden_layers = [inputDim*4, inputDim]                         # 1.08, 0.13
+    #hidden_layers = [inputDim*4]
+    #hidden_layers = [inputDim*10]
+    hidden_layers = [inputDim, int(inputDim/4)]
 
-    ######################################################################################
-    # Hidden Layer
-    ######################################################################################
-    
-    model.add(Dense(
-        int(inputDim/2),
-        activation         = activation,
-        bias_initializer   = bias_init,
-        use_bias           = bias_use,
-        kernel_regularizer = kern_reg
-    ))
-    
-    model.add(Dropout(keep_rate))
-    
     
     ######################################################################################
-    # Hidden Layer
+    # Hidden Layers
     ######################################################################################
     
-    model.add(Dense(
-        int(inputDim/4),
-        activation         = activation,
-        bias_initializer   = bias_init,
-        use_bias           = bias_use,
-        kernel_regularizer = kern_reg
-    ))
-    
-    model.add(Dropout(keep_rate))
-    
+    for layer_dim in hidden_layers:
+        
+        ##################################################################################
+        ##################################################################################
+        
+        model.add(Dense(
+            layer_dim,
+            activation         = activation,
+            bias_initializer   = bias_init,
+            use_bias           = bias_use#,
+            #kernel_regularizer = kern_reg
+        ))
+        
+        model.add(Dropout(keep_rate))
 
+        
+        ##################################################################################
+        ##################################################################################
 
-
+        continue
+        
 
     ######################################################################################
     # Output Layer
@@ -119,11 +94,10 @@ def xy_s2integrals_dnnModel(activation='elu', keep_rate=0.00005):
     # Compile model
     ######################################################################################
     
-    model.compile(loss='mean_squared_error', optimizer='adam')
+    model.compile(loss='mean_squared_error', optimizer='adam', metrics=['acc'])
     
     
     ######################################################################################
-    # Output Layer
     ######################################################################################
     
     return model, name
