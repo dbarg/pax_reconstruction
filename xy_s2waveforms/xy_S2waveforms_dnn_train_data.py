@@ -55,7 +55,7 @@ cols = [
 resample_factor = 230
 
 iEventStart  = 0
-nEventsTrain = 100 #25000
+nEventsTrain = 25000
 iEventEnd    = iEventStart + nEventsTrain
 
 input_dir  = "../../pax_merge/merged/apr30/"
