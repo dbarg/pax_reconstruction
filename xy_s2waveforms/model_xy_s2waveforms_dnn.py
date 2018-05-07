@@ -60,7 +60,9 @@ def dnnModel(
     ######################################################################################
     
     #hidden_layers = [inputDim, 635, 317]
-    hidden_layers = [inputDim, int(inputDim/10)]
+    #hidden_layers = [inputDim, int(inputDim/10)]
+    #hidden_layers = [inputDim]
+    hidden_layers = [2540, 1270, 127]
 
     
     ######################################################################################
