@@ -31,68 +31,63 @@ def dnnModel(
 
     inputDim = n_timesteps*n_channels
     
-    name = 'model_xy_s2waveforms_dnn_' + activation #+ '_in%04d' % inputDim + '_out%01d' % n_outputs
+    name = 'dnn_xy_s2waveforms_' + activation #+ '_in%04d' % inputDim + '_out%01d' % n_outputs
 
     reg_scale  = 0.00100 # possibly bad
     bias_init  = 'zeros'
     bias_use   = True
     kern_reg   = regularizers.l2(reg_scale)
     
-    
+   
     ######################################################################################
     # Input Layer
     ######################################################################################
-
     
     model = Sequential()
-    model.add(Dense(inputDim, input_dim=inputDim))
+    
+    #model.add(Dense(inputDim, input_dim=inputDim))
+    model.add(Dense(inputDim, input_dim=inputDim, activation=activation))
 
     
     ######################################################################################
-    # Hidden Layer
+    # Timesteps:
+    #
+    #  10
+    #   layers = [635, 317]
+    #
+    #  50
+    #   layers = [1270, 508]
     ######################################################################################
     
-    model.add(Dense(
-        inputDim,
-        activation         = activation,
-        bias_initializer   = bias_init,
-        use_bias           = bias_use,
-        kernel_regularizer = kern_reg
-    ))
+    #hidden_layers = [inputDim, 635, 317]
+    hidden_layers = [inputDim, int(inputDim/10)]
+
     
-    model.add(Dropout(keep_rate))
+    ######################################################################################
+    # Hidden Layers
+    ######################################################################################
     
-      
-    #######################################################################################
-    ## Hidden Layer
-    #######################################################################################
-    #
-    #model.add(Dense(
-    #    int(inputDim/2),
-    #    activation         = activation,
-    #    bias_initializer   = bias_init,
-    #    use_bias           = bias_use,
-    #    kernel_regularizer = kern_reg
-    #))
-    #
-    #model.add(Dropout(keep_rate))
-    # 
-    #        
-    #######################################################################################
-    ## Hidden Layer
-    #######################################################################################
-    #
-    #model.add(Dense(
-    #    int(inputDim/4),
-    #    activation         = activation,
-    #    bias_initializer   = bias_init,
-    #    use_bias           = bias_use,
-    #    kernel_regularizer = kern_reg
-    #))
-    #
-    #model.add(Dropout(keep_rate))
-    
-    
+    for layer_dim in hidden_layers:
+        
+        ##################################################################################
+        ##################################################################################
+        
+        model.add(Dense(
+            layer_dim,
+            activation         = activation,
+            bias_initializer   = bias_init,
+            use_bias           = bias_use#,
+            #kernel_regularizer = kern_reg
+        ))
+        
+        model.add(Dropout(keep_rate))
+
+        
+        ##################################################################################
+        ##################################################################################
+
+        continue
+        
         
     ######################################################################################
     ######################################################################################
@@ -104,7 +99,7 @@ def dnnModel(
     ######################################################################################
     ######################################################################################
     
-    model.compile(loss='mean_squared_error', optimizer='adam')
+    model.compile(loss='mean_squared_error', optimizer='adam', metrics=['acc'])
     
     
     ######################################################################################
@@ -124,7 +119,7 @@ def dnnModel_s2integrals(
     ######################################################################################
     ######################################################################################
     
-    name = 'model_xy_s2waveforms_dnn_s2integrals' + activation
+    name = 'model_xy_s2waveforms_dnn_s2integrals_' + activation
 
     reg_scale  = 0.00100 # possibly bad
     bias_init  = 'zeros'
@@ -213,7 +208,7 @@ def dnnModel_s2integrals(
     ######################################################################################
     ######################################################################################
     
-    model.compile(loss='mean_squared_error', optimizer='adam')
+    model.compile(loss='mean_squared_error', optimizer='adam', metrics=['acc'])
     
     
     ######################################################################################

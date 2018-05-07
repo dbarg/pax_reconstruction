@@ -377,8 +377,26 @@ def get_padded_array(
         assert(event_s2_length == channel_left_offset + channel_length + channel_right_offset  )
     
         arr_channel[channel_left_offset : channel_left_offset + channel_length] = channel_raw_data
+
+        channels_sum   = np.sum(arr_channel)
+        integrals_diff = abs(channel_integral - channels_sum)
+        integrals_eq   = integrals_diff < 1e-2
+
+        if (not integrals_eq):
+            
+            print()
+            print(" -> channel:     " + channel         ) 
+            print(" -> event:       " + channel_integral)
+            print(" -> channls sum: " + channels_sum    )
+            print(" -> difference:  " + integrals_diff  )
+            print()
+
+        #assert( abs(channel_integral - np.sum(arr_channel)) < 1e-4 )
+
         
-        assert( abs(channel_integral - np.sum(arr_channel)) < 1e-4 )
+        ########################################################################################
+        ########################################################################################
+        
         
         #channel_length       = channel_left_offset + channel_length + channel_right_offset
         #print()

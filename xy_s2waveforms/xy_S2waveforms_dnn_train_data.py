@@ -47,15 +47,15 @@ cols = [
 ####################################################################################################
 ####################################################################################################
 
-#resample_factor = 2290
-#resample_factor = 229
-#resample_factor = 10
+#resample_factor = 230 # done
+#resample_factor = 115 # done
+#resample_factor = 92
+#resample_factor = 50
+resample_factor = 46
 #resample_factor = 23
-#resample_factor = 46
-resample_factor = 230
 
 iEventStart  = 0
-nEventsTrain = 25000
+nEventsTrain = 200000
 iEventEnd    = iEventStart + nEventsTrain
 
 input_dir  = "../../pax_merge/merged/apr30/"
@@ -66,7 +66,6 @@ dir_in     = '../../pax_merge/merged/apr30/waveforms_s2waveforms_test_v2/new'
 
 ####################################################################################################
 ####################################################################################################
-
 
 df_events     = pd.read_pickle(input_path)
 df_events     = df_events[df_events['intr_count'] == 1].reset_index(drop=True)
