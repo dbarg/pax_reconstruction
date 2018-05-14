@@ -78,8 +78,8 @@ def dnnModel(
             layer_dim,
             activation         = activation,
             bias_initializer   = bias_init,
-            use_bias           = bias_use#,
-            #kernel_regularizer = kern_reg
+            use_bias           = bias_use,
+            kernel_regularizer = kern_reg
         ))
         
         model.add(Dropout(keep_rate))
