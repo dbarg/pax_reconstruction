@@ -12,17 +12,17 @@ import sys
 ####################################################################################################
 ####################################################################################################
 
-#n_timesteps   = 10
-#layers_hidden = [1270]
+n_timesteps   = 10
+layers_hidden = [1270]
 #layers_hidden = [1270, 127]
 
 #n_timesteps   = 20
 #layers_hidden = [2540]
 #layers_hidden = [2540, 1270, 127]
 
-n_timesteps   = 50
+#n_timesteps   = 50
 #layers_hidden = [6350]
-layers_hidden = [6350, 2540, 1270, 127]
+#layers_hidden = [6350, 2540, 1270, 127]
 
 
 ####################################################################################################
@@ -77,10 +77,8 @@ line1 = '#SBATCH --output=%s/logs/' % dir_output + 'out_%s' % desc + '.txt'
 line2 = '#SBATCH --error=%s/logs/'  % dir_output + 'err_%s' % desc + '.txt'
 line3 = '#SBATCH --ntasks=1'
 line4 = '#SBATCH --account=pi-lgrandi'
-line5 = 'source /home/dbarge/.bashrc'
-line6 = 'source /home/dbarge/.setup-ml_py364.sh'
-line7 = 'echo "\n$PATH\n"'
-line8 = cmd
+line5 = 'source ~/.setup-ml_py364.sh'
+line6 = cmd
 
 
 ####################################################################################################
@@ -102,12 +100,8 @@ with open(batch_file, 'w') as out_file:
     out_file.write(line4)
     out_file.write('\n\n')
     out_file.write(line5)
-    out_file.write('\n')
+    out_file.write('\n\n')
     out_file.write(line6)
-    out_file.write('\n\n')
-    out_file.write(line7)
-    out_file.write('\n\n')
-    out_file.write(line8)
     out_file.write('\n')
     
 os.chmod(batch_file, 0o744)
