@@ -12,8 +12,17 @@ import sys
 ####################################################################################################
 ####################################################################################################
 
-layers_hidden = [1270, 127]
-n_timesteps   = 10
+#n_timesteps   = 10
+#layers_hidden = [1270]
+#layers_hidden = [1270, 127]
+
+#n_timesteps   = 20
+#layers_hidden = [2540]
+#layers_hidden = [2540, 1270, 127]
+
+n_timesteps   = 50
+#layers_hidden = [6350]
+layers_hidden = [6350, 2540, 1270, 127]
 
 
 ####################################################################################################
@@ -23,6 +32,7 @@ n_channels    = 127
 n_inputs      = n_timesteps * n_channels
 n_outputs     = 2
 n_events      = 100000
+n_epochs      = 10
 
 layers_arg    = str(' ').join(str(x) for x in layers_hidden)
 layers_desc   = 'layers' + str(n_inputs) + '-' + str('-').join(str(x) for x in layers_hidden) + '-' + str(n_outputs)
@@ -38,6 +48,7 @@ cmd += "-file_truth %s "    % file_truth
 cmd += "-n_timesteps %d "   % n_timesteps
 cmd += "-n_outputs %d "     % n_outputs
 cmd += "-n_events %d "      % n_events
+cmd += "-n_epochs %d "      % n_epochs
 cmd += "-layers_hidden %s " % layers_arg
 
 

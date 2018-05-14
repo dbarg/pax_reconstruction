@@ -51,7 +51,8 @@ def main(
     n_timesteps,
     n_outputs,
     layers_hidden,
-    n_events_train):
+    n_events_train,
+    n_epochs=10):
 
 
     ################################################################################################
@@ -104,11 +105,9 @@ def main(
     
     ######################################################################################
     # Fit Model
+    #
+    #  to do: reset model 
     ######################################################################################
-    
-    # to do: reset model 
-    
-    epochs = 1
     
     if (ver_major >= 2):
         
@@ -116,7 +115,7 @@ def main(
             train_data,
             train_truth,
             batch_size=64,
-            epochs=epochs,
+            epochs=n_epochs,
             verbose=True
         )
     
@@ -127,7 +126,7 @@ def main(
             train_truth,
             batch_size=64,
             #epochs=epochs,
-            nb_epoch=epochs,
+            nb_epoch=n_epochs,
             verbose=True
         )
     
@@ -189,6 +188,7 @@ if __name__ == "__main__":
     parser.add_argument('-n_timesteps'   , required=True, type=int)
     parser.add_argument('-n_outputs'     , required=True, type=int)
     parser.add_argument('-n_events_train', required=True, type=int)
+    parser.add_argument('-n_epochs'      , required=True, type=int)
     parser.add_argument('-layers_hidden' , required=True, type=int, nargs="+")
     
     args = parser.parse_args()
@@ -198,6 +198,8 @@ if __name__ == "__main__":
     n_timesteps    = args.n_timesteps
     n_outputs      = args.n_outputs
     n_events_train = args.n_events_train
+    n_epochs       = args.n_epochs
+
     layers_hidden  = args.layers_hidden
 
     print()
@@ -208,5 +210,5 @@ if __name__ == "__main__":
     assert(os.path.exists(file_input))
     assert(os.path.exists(file_truth))
 
-    main(file_input, file_truth, n_timesteps, n_outputs, layers_hidden, n_events_train)
+    main(file_input, file_truth, n_timesteps, n_outputs, layers_hidden, n_events_train, n_epochs)
 
