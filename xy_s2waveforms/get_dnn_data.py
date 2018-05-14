@@ -44,13 +44,15 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
 
         resample                = True
         s2_window_max_resampled = s2_window_max / resample_factor
-        
-    
+
+        s2_window_max_resampled = int(s2_window_max_resampled)
+        #print(s2_window_max_resampled)    
+
     ####################################################################################################
     # Input directory - containing S2 waveforms for all top channels
     ####################################################################################################
     
-    dir_format_s2   = dir_input_s2 + '/' + 'event' + ('[0-9]' * 6) + '_S2waveforms.pkl'
+    dir_format_s2   = dir_input_s2 + '/' + 'event' + ('[0-9]' * 7) + '_S2waveforms.pkl'
     lst_contents_s2 = glob.glob(dir_format_s2)
     lst_events      = df_events['event_number'].as_matrix().tolist()
     
@@ -93,7 +95,7 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
         # Get Event Information
         ################################################################################################
         
-        infile = dir_input_s2 + '/event' + format(event_num, '06d') + '_S2waveforms.pkl'
+        infile = dir_input_s2 + '/event' + format(event_num, '07d') + '_S2waveforms.pkl'
 
         
         ################################################################################################
@@ -129,13 +131,13 @@ def get_data(dir_input_s2, df_events, s2_window_max, resample_factor=1):
 
         df_s2waveforms = pd.DataFrame()
         
-        #df_s2waveforms = pd.read_pickle(infile)
-        #df_s2waveforms = waveform_utils.addEmptyChannelsToDataFrame(df_s2waveforms)
+        df_s2waveforms = pd.read_pickle(infile)
+        df_s2waveforms = waveform_utils.addEmptyChannelsToDataFrame(df_s2waveforms)
         
-        with open(infile, "rb") as f:
-            df_s2waveforms = pickle.load(f)
-            df_s2waveforms = waveform_utils.addEmptyChannelsToDataFrame(df_s2waveforms)
-            f.close()
+        #with open(infile, "rb") as f:
+        #    df_s2waveforms = pickle.load(f)
+        #    df_s2waveforms = waveform_utils.addEmptyChannelsToDataFrame(df_s2waveforms)
+        #    f.close()
     
         t1 = time.time()
         
@@ -361,6 +363,10 @@ def get_padded_array(
     # Pad the S2 array for all channels in the event
     ############################################################################################
     
+    event_s2_left   = int(event_s2_left)
+    event_s2_right  = int(event_s2_right)
+    event_s2_length = int(event_s2_length)
+
     arr_channel        = np.zeros(event_s2_length, dtype ='float32')
     arr_channel_padded = np.zeros(s2_window_max  , dtype ='float32')
     

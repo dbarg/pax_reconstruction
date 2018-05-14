@@ -6,15 +6,10 @@ import datetime
 import math
 import sys
 import glob
-import psutil
 import os.path
 
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 import numpy as np
 import pandas as pd
-
-from IPython.display import display
 
 #sys.path.append(os.path.abspath("../../"))
 #sys.path.append(os.path.abspath("../../pax_utils"))
@@ -47,21 +42,20 @@ cols = [
 ####################################################################################################
 ####################################################################################################
 
-#resample_factor = 230 # done
-#resample_factor = 115 # done
-#resample_factor = 92
-#resample_factor = 50
-resample_factor = 46
-#resample_factor = 23
+#resample_factor = 200 # 10
+#resample_factor = 80  # 25
+#resample_factor = 40  # 50
+resample_factor = 20  # 200
+
 
 iEventStart  = 0
 nEventsTrain = 200000
 iEventEnd    = iEventStart + nEventsTrain
 
-input_dir  = "../../pax_merge/merged/apr30/"
+input_dir  = "/home/dbarge/scratch/simulations/wimp/merged/may07/"
 input_file = 'merged_all_200000.pkl'
 input_path = input_dir + input_file
-dir_in     = '../../pax_merge/merged/apr30/waveforms_s2waveforms_test_v2/new'
+dir_in     = '/home/dbarge/scratch/simulations/wimp/merged/may07/waveforms_s2waveforms_v2/s2/'
 
 
 ####################################################################################################
@@ -81,8 +75,8 @@ df_events    = df_events[:][cols]
 ####################################################################################################
 ####################################################################################################
 
-file_out_input = 'train/array_train_input_events%06d-%06d_timesteps%04d' % (iEventStart, iEventEnd - 1, nTimesteps)
-file_out_truth = 'train/array_train_truth_events%06d-%06d_timesteps%04d' % (iEventStart, iEventEnd - 1, nTimesteps)
+file_out_input = 'train_69/array_train_input_events%06d-%06d_timesteps%04d' % (iEventStart, iEventEnd - 1, nTimesteps)
+file_out_truth = 'train_69/array_train_truth_events%06d-%06d_timesteps%04d' % (iEventStart, iEventEnd - 1, nTimesteps)
 
 print()
 print("Total Events:      " + str(TotalEvents))
