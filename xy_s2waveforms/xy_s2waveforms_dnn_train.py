@@ -9,6 +9,7 @@ import json
 import os
 import pprint
 import sys
+import time
 
 import numpy as np
 import pandas as pd
@@ -16,10 +17,10 @@ import scipy as sp
 
 #from PIL import Image
 
-#import theano
+import theano
 #import pygpu
 
-import tensorflow 
+#import tensorflow 
 
 import keras
 #from keras import backend as K
@@ -41,6 +42,7 @@ pp = pprint.PrettyPrinter(depth=4)
 
 ver       = keras.__version__.split('.')
 ver_major = int(ver[0])
+
 
 ####################################################################################################
 ####################################################################################################
@@ -181,6 +183,8 @@ def main(
 
 if __name__ == "__main__":
 
+    t0 = time.time()
+    
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-file_input'    , required=True)
@@ -211,4 +215,9 @@ if __name__ == "__main__":
     assert(os.path.exists(file_truth))
 
     main(file_input, file_truth, n_timesteps, n_outputs, layers_hidden, n_events_train, n_epochs)
+    
+    t1 = time.time()
+    dt = round(t1 - t0, 0)
+    print("Total Time: " + str(dt) + " s")
+    
 
