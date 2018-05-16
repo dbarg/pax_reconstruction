@@ -17,16 +17,21 @@ import sys
 #layers_hidden = [1270, 127]
 
 n_timesteps   = 20
-layers_hidden = [2540]
-#layers_hidden = [2540, 1270, 127]
+#layers_hidden = [2540]
+layers_hidden = [2540, 1270, 127]
+
+#n_timesteps   = 25
+#layers_hidden = [3175]
+#layers_hidden = [3175, 1270, 127]
 
 #n_timesteps   = 50
 #layers_hidden = [6350]
 #layers_hidden = [6350, 2540, 1270, 127]
+#layers_hidden = [6350, 3175, 1270, 127]
 
-#n_timesteps   = 200
-#layers_hidden = [6350]
-#layers_hidden = [6350, 2540, 1270, 127]
+#n_timesteps   = 100
+#layers_hidden = [12700]
+#layers_hidden = [12700, 6350, 3175, 1270, 127]
 
 
 ####################################################################################################
@@ -36,11 +41,41 @@ n_channels    = 127
 n_inputs      = n_timesteps * n_channels
 n_outputs     = 2
 n_events      = 100000
-n_epochs      = 15
+n_epochs      = 20
+
+
+####################################################################################################
+####################################################################################################
+
+loss = 'mean_squared_error'
+#loss = 'mean_absolute_error'
+#loss = 'mean_absolute_percentage_error'
+#loss = 'mean_squared_logarithmic_error'
+#loss = 'logcosh'
+
+loss_desc = loss
+
+if ('_' in loss_desc):
+    
+    loss_desc = ''.join( [x[:1] for x in loss.split('_') ] )
+
+
+
+####################################################################################################
+####################################################################################################
+
+optimizer = 'adam'
+
+
+
+####################################################################################################
+####################################################################################################
 
 layers_arg    = str(' ').join(str(x) for x in layers_hidden)
 layers_desc   = 'layers' + str(n_inputs) + '-' + str('-').join(str(x) for x in layers_hidden) + '-' + str(n_outputs)
-desc          = 'timesteps%04d' % n_timesteps + '_' + layers_desc 
+
+desc =  ('ts%04d' % n_timesteps) + '_' + ('e%02d' % n_epochs) + '_' + loss_desc + '_' + optimizer + '_' + layers_desc 
+
 
 dir_input     = "/scratch/midway2/dbarge/train_pax65/"
 file_input    = dir_input + "array_train_input_events000000-199999_timesteps%04d.npy" % n_timesteps
@@ -54,6 +89,9 @@ line_cmd += "-n_outputs %d "     % n_outputs
 line_cmd += "-n_events %d "      % n_events
 line_cmd += "-n_epochs %d "      % n_epochs
 line_cmd += "-layers_hidden %s " % layers_arg
+
+line_cmd += "-loss %s "          % loss
+line_cmd += "-optimizer %s "     % optimizer
 
 
 ####################################################################################################
@@ -76,6 +114,8 @@ if (not os.path.isdir(dir_logs)):
 ####################################################################################################
 ####################################################################################################
 
+#SBATCH --mem=4gb
+
 useGPU = True
 
 line_python = 'source ~/.setup-ml_py364.sh'
@@ -93,6 +133,7 @@ if (useGPU is True):
     line_sbatch += (
                     "#SBATCH --partition=gpu2\n"
                     "#SBATCH --gres=gpu:1\n"
+                    "#SBATCH --mem=16gb\n"
                     "#SBATCH --nodes=1\n"
                     "#SBATCH --ntasks=1\n"
                     "#SBATCH --time=01:00:00\n"
