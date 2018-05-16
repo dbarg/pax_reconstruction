@@ -74,7 +74,7 @@ if (not os.path.isdir(dir_logs)):
 
 useGPU = True
 
-line_python = '~/.setup-ml_py364.sh'
+line_python = 'source ~/.setup-ml_py364.sh'
 line_sbatch = (
                "#!/bin/bash\n\n"
                "#SBATCH --output=%s/logs/" % dir_output + 'out_%s' % desc + '.txt' + "\n"
@@ -85,7 +85,7 @@ line_sbatch = (
 
 if (useGPU is True):
 
-    line_python = '~/.setup-ml_gpu.sh'
+    line_python = 'source ~/.setup-ml_gpu2.sh'
     line_sbatch += (
                     "#SBATCH --partition=gpu2\n"
                     "#SBATCH --gres=gpu:1\n"
