@@ -24,6 +24,10 @@ layers_hidden = [2540]
 #layers_hidden = [6350]
 #layers_hidden = [6350, 2540, 1270, 127]
 
+#n_timesteps   = 200
+#layers_hidden = [6350]
+#layers_hidden = [6350, 2540, 1270, 127]
+
 
 ####################################################################################################
 ####################################################################################################
@@ -32,7 +36,7 @@ n_channels    = 127
 n_inputs      = n_timesteps * n_channels
 n_outputs     = 2
 n_events      = 100000
-n_epochs      = 10
+n_epochs      = 15
 
 layers_arg    = str(' ').join(str(x) for x in layers_hidden)
 layers_desc   = 'layers' + str(n_inputs) + '-' + str('-').join(str(x) for x in layers_hidden) + '-' + str(n_outputs)

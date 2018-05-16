@@ -17,31 +17,17 @@ import scipy as sp
 
 #from PIL import Image
 
-import theano
-#import pygpu
-
-#import tensorflow 
-
 import keras
-#from keras import backend as K
 from keras import layers
-from keras.models import load_model
 from keras.callbacks import CSVLogger
-#from keras.utils import plot_model
+from keras.models import load_model
+from keras.utils import plot_model
 
-#sys.path.append(os.path.abspath("../../"))
 sys.path.append("/home/dbarge")
-#sys.path.append(os.path.abspath("~/keras_utils"))
-
-#print("\n" + str(sys.path) + "\n")
-
 from keras_utils.config_utils import *
-from keras_utils.dnn import *
+from keras_utils.dnn_utils import *
 
 pp = pprint.PrettyPrinter(depth=4)
-
-ver       = keras.__version__.split('.')
-ver_major = int(ver[0])
 
 
 ####################################################################################################
@@ -56,7 +42,9 @@ def main(
     n_events_train,
     n_epochs):
 
+    printVersions()
 
+    
     ################################################################################################
     ################################################################################################
 
@@ -111,26 +99,13 @@ def main(
     #  to do: reset model 
     ######################################################################################
     
-    if (ver_major >= 2):
-    
-        history = model.fit(
-            train_data,
-            train_truth,
-            batch_size=64,
-            epochs=n_epochs,
-            verbose=2
-        )
-    
-    else:
-    
-        history = model.fit(
-            train_data,
-            train_truth,
-            batch_size=64,
-            #epochs=epochs,
-            nb_epoch=n_epochs,
-            verbose=True
-        )
+    history = model.fit(
+        train_data,
+        train_truth,
+        batch_size=64,
+        epochs=n_epochs,
+        verbose=2
+    )
     
     
     ######################################################################################
@@ -163,19 +138,25 @@ def main(
     folder   = "models/"    
     desc     = 'dnn_' + model_name + '_' + acc + '_epochs' + str(n_epochs) + '_' + layers_desc 
     name_h5  = folder + desc + '.h5'
-    name_png = name_h5.replace('.h5', '.png')
     name_cfg = name_h5.replace('.h5', '.json')
+    name_png = name_h5.replace('.h5', '.png')
     
     
     ######################################################################################
     # Save
     ######################################################################################
     
-    print("\nSaving model: '" + name_h5 + "'\n")
-    
     model.save(name_h5, overwrite=True)
     with open(name_cfg, 'w') as fp: json.dump(config, fp)
-    #plot_model(model, to_file=name_png, show_layer_names=True, show_shapes=True)
+        
+    print("\nSaved model: '" + name_h5 + "'\n")
+    
+    
+    ######################################################################################
+    ######################################################################################
+
+
+    plot_model(model, to_file=name_png, show_layer_names=True, show_shapes=True)
 
 
 ####################################################################################################
@@ -184,6 +165,9 @@ def main(
 if __name__ == "__main__":
 
     t0 = time.time()
+    
+    ################################################################################################
+    ################################################################################################
     
     parser = argparse.ArgumentParser()
 
@@ -214,10 +198,19 @@ if __name__ == "__main__":
     assert(os.path.exists(file_input))
     assert(os.path.exists(file_truth))
 
+    
+    ################################################################################################
+    ################################################################################################
+    
     main(file_input, file_truth, n_timesteps, n_outputs, layers_hidden, n_events_train, n_epochs)
+
+    
+    ################################################################################################
+    ################################################################################################
     
     t1 = time.time()
     dt = round(t1 - t0, 0)
-    print("Total Time: " + str(dt) + " s")
-    
+    dt = datetime.timedelta(seconds=dt)
+    print("Total Time: " + str(dt))
+
 
