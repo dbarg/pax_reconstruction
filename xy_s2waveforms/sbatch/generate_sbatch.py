@@ -42,7 +42,7 @@ layers_arg    = str(' ').join(str(x) for x in layers_hidden)
 layers_desc   = 'layers' + str(n_inputs) + '-' + str('-').join(str(x) for x in layers_hidden) + '-' + str(n_outputs)
 desc          = 'timesteps%04d' % n_timesteps + '_' + layers_desc 
 
-dir_input     = "../train_pax65/"
+dir_input     = "/scratch/midway2/dbarge/train_pax65/"
 file_input    = dir_input + "array_train_input_events000000-199999_timesteps%04d.npy" % n_timesteps
 file_truth    = dir_input + "array_train_truth_events000000-199999_timesteps%04d.npy" % n_timesteps
 
