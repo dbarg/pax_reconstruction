@@ -16,13 +16,13 @@ import sys
 #layers_hidden = [1270]
 #layers_hidden = [1270, 127]
 
-#n_timesteps   = 20
-#layers_hidden = [2540]
+n_timesteps   = 20
+layers_hidden = [2540]
 #layers_hidden = [2540, 1270, 127]
 
-n_timesteps   = 50
+#n_timesteps   = 50
 #layers_hidden = [6350]
-layers_hidden = [6350, 2540, 1270, 127]
+#layers_hidden = [6350, 2540, 1270, 127]
 
 
 ####################################################################################################
@@ -42,14 +42,14 @@ dir_input     = "../train_pax65/"
 file_input    = dir_input + "array_train_input_events000000-199999_timesteps%04d.npy" % n_timesteps
 file_truth    = dir_input + "array_train_truth_events000000-199999_timesteps%04d.npy" % n_timesteps
 
-cmd = "python ../xy_s2waveforms_dnn_train.py " 
-cmd += "-file_input %s "    % file_input
-cmd += "-file_truth %s "    % file_truth
-cmd += "-n_timesteps %d "   % n_timesteps
-cmd += "-n_outputs %d "     % n_outputs
-cmd += "-n_events %d "      % n_events
-cmd += "-n_epochs %d "      % n_epochs
-cmd += "-layers_hidden %s " % layers_arg
+line_cmd = "python ../xy_s2waveforms_dnn_train.py " 
+line_cmd += "-file_input %s "    % file_input
+line_cmd += "-file_truth %s "    % file_truth
+line_cmd += "-n_timesteps %d "   % n_timesteps
+line_cmd += "-n_outputs %d "     % n_outputs
+line_cmd += "-n_events %d "      % n_events
+line_cmd += "-n_epochs %d "      % n_epochs
+line_cmd += "-layers_hidden %s " % layers_arg
 
 
 ####################################################################################################
@@ -72,13 +72,36 @@ if (not os.path.isdir(dir_logs)):
 ####################################################################################################
 ####################################################################################################
 
-line0 = '#!/bin/bash'
-line1 = '#SBATCH --output=%s/logs/' % dir_output + 'out_%s' % desc + '.txt'
-line2 = '#SBATCH --error=%s/logs/'  % dir_output + 'err_%s' % desc + '.txt'
-line3 = '#SBATCH --ntasks=1'
-line4 = '#SBATCH --account=pi-lgrandi'
-line5 = 'source ~/.setup-ml_py364.sh'
-line6 = cmd
+useGPU = True
+
+line_python = '~/.setup-ml_py364.sh'
+line_sbatch = (
+               "#!/bin/bash\n\n"
+               "#SBATCH --output=%s/logs/" % dir_output + 'out_%s' % desc + '.txt' + "\n"
+               "#SBATCH --error=%s/logs/"  % dir_output + 'err_%s' % desc + '.txt' + "\n"
+               "#SBATCH --ntasks=1\n"
+               "#SBATCH --account=pi-lgrandi\n\n"
+              )
+
+if (useGPU is True):
+
+    line_python = '~/.setup-ml_gpu.sh'
+    line_sbatch += (
+                    "#SBATCH --partition=gpu2\n"
+                    "#SBATCH --gres=gpu:1\n"
+                    "#SBATCH --nodes=1\n"
+                    "#SBATCH --ntasks=1\n"
+                    "#SBATCH --time=01:00:00\n"
+                   )
+
+    line_gpu = (
+            'echo ""\n'
+            'nvidia-smi\n'
+            'echo ""\n'
+            'nvcc --version\n'
+            'echo ""\n\n'
+           )
+
 
 
 ####################################################################################################
@@ -89,20 +112,12 @@ batch_file = dir_scripts + 'submit_' + base_file + ".sh"
 
 with open(batch_file, 'w') as out_file:
 
-    out_file.write(line0)
+    out_file.write(line_sbatch)
+    out_file.write('\n')
+    if (useGPU): out_file.write(line_gpu)
+    out_file.write(line_python)
     out_file.write('\n\n')
-    out_file.write(line1)
-    out_file.write('\n')
-    out_file.write(line2)
-    out_file.write('\n')
-    out_file.write(line3)
-    out_file.write('\n')
-    out_file.write(line4)
-    out_file.write('\n\n')
-    out_file.write(line5)
-    out_file.write('\n\n')
-    out_file.write(line6)
-    out_file.write('\n')
+    out_file.write(line_cmd)
     
 os.chmod(batch_file, 0o744)
 
