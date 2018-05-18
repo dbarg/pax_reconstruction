@@ -8,6 +8,7 @@ import glob
 import json
 import os
 import pprint
+import subprocess
 import sys
 import time
 
@@ -40,9 +41,28 @@ def main(
     n_events_train,
     n_epochs,
     loss,
-    optimizer):
+    optimizer,
+    useGPU):
 
+    ################################################################################################
+    ################################################################################################
+    
     printVersions()
+
+    
+    ################################################################################################
+    ################################################################################################
+    
+    result = subprocess.run(['nvidia-smi'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    code   = result.returncode
+
+    if (code != 0):
+        
+        print("Error! CUDA not available")
+        print("'nvidia-smi' gave nonzero return code " + str(code) + "\n") 
+              
+        return
+    
 
     
     ################################################################################################
@@ -70,11 +90,11 @@ def main(
     ####################################################################################################
     
     print()
-    print("Channels:         " + str(n_channels))
-    print("Timesteps:        " + str(n_timesteps))
-    print("Outputs:          " + str(n_outputs) )
-    print("Input data shape: " + str(train_data.shape ))
-    print("Truth data shape: " + str(train_truth.shape))
+    print("Channels:             " + str(n_channels))
+    print("Timesteps:            " + str(n_timesteps))
+    print("Outputs:              " + str(n_outputs) )
+    print("Training Input shape: " + str(train_data.shape ))
+    print("Training Truth shape: " + str(train_truth.shape))
     print()
     
     
@@ -96,10 +116,6 @@ def main(
     model.summary()
     print()
     
-    #print(model.get_layer('input'))
-    #print(model.get_layer('encoded'))
-    
-    #return
 
     ######################################################################################
     # Fit Model
@@ -111,6 +127,7 @@ def main(
         train_data,
         train_truth,
         batch_size=64,
+        #batch_size=32,
         epochs=n_epochs,
         verbose=2
     )
@@ -118,26 +135,17 @@ def main(
     
     ######################################################################################
     ######################################################################################
-    
+
+    dct_config  = model.get_config()
     dct_history = history.history
     
     last_loss = dct_history['loss'][n_epochs-1]
     last_loss = int(round(last_loss*100, 0))
     last_loss = 'loss' + str(last_loss)
     
-    acc  = dct_history['acc'][n_epochs-1]
-    acc  = int(round(acc*1e4, 0))
-    acc  = 'ac%04d' % acc
-    
-    
-    ######################################################################################
-    ######################################################################################
-    
-    config     = model.get_config()
-    #layer_desc = getModelDescription(config)   
-    
-    #pp.pprint(config)
-    
+    last_acc  = dct_history['acc'][n_epochs-1]
+    last_acc  = int(round(last_acc*1e4, 0))
+    last_acc  = 'ac%04d' % last_acc
     
     
     ######################################################################################
@@ -150,12 +158,23 @@ def main(
         
         loss_desc = ''.join( [x[:1] for x in loss.split('_') ] )
     
+    desc     = 'dnn_' + model_name + '_'
+    desc     += ("ts%04d" % n_timesteps) + '_' 
+    desc     += ('e%02d' % n_epochs) + '_' 
+    desc     += loss_desc + '_' 
+    desc     += optimizer + '_'
+    desc     += last_acc + '_'
+    desc     += layers_desc
 
-    folder   = "models/"    
-    desc     = 'dnn_' + model_name + ("_ts%04d" % n_timesteps) + '_' + ('e%02d' % n_epochs) + '_' + loss_desc + '_' + optimizer + '_' + acc + '_' + layers_desc
+    folder   = "models/cpu/"
     
+    if (useGPU is True):
+        
+        folder   = "models/gpu/"
+
     name_h5  = folder + desc + '.h5'
-    name_cfg = folder + desc + '.json'
+    name_cfg = folder + desc + '_cfg.json'
+    name_hst = folder + desc + '_hist.json'
     name_png = folder + desc + '.png'
     
     
@@ -164,11 +183,51 @@ def main(
     ######################################################################################
     
     model.save(name_h5, overwrite=True)
-    with open(name_cfg, 'w') as fp: json.dump(config, fp)
+    
+    with open(name_cfg, 'w') as fp: json.dump(dct_config , fp)
+    with open(name_hst, 'w') as fp: json.dump(dct_history, fp)
+
     plot_model(model, to_file=name_png, show_layer_names=True, show_shapes=True)
         
-    print("\nSaved model: '" + name_h5 + "'\n")
+    print("\nSaved model: '" + name_h5 + "\n")
     
+    
+    ######################################################################################
+    # Predict
+    ######################################################################################
+    
+    test_data  = train_data [n_events_train:, :]
+    test_truth = train_truth[n_events_train:, :]
+    
+    print("Test Input shape: " + str(test_data.shape ))
+    print("Test Truth shape: " + str(test_truth.shape))
+    
+    arr_pred = model.predict(train_data)
+
+    
+    ####################################################################################################
+    ####################################################################################################
+    
+    df_out           = pd.DataFrame()
+    df_out['x_pred'] = arr_pred[:, 0]
+    df_out['y_pred'] = arr_pred[:, 1]
+    df_out['x_true'] = train_truth[:, 0]
+    df_out['y_true'] = train_truth[:, 1]
+
+    dir_pred = "predictions/cpu/"
+    
+    if (useGPU is True): 
+        
+        print("HERE")
+        dir_pred = "predictions/gpu/"
+
+    file_hdf = dir_pred + os.path.basename(name_h5).replace('.h5', '.hdf5')
+
+    df_out.to_hdf(file_hdf, 'df')
+
+    print("\nSaved predictions: '" + file_hdf + "'\n")
+
+
     
     ######################################################################################
     ######################################################################################
@@ -196,9 +255,9 @@ if __name__ == "__main__":
     parser.add_argument('-n_events_train', required=True, type=int)
     parser.add_argument('-n_epochs'      , required=True, type=int)
     parser.add_argument('-layers_hidden' , required=True, type=int, nargs="+")
-
     parser.add_argument('-loss'          , required=True)
     parser.add_argument('-optimizer'     , required=True)
+    parser.add_argument('-useGPU'        , required=True, type=bool)
 
         
     args = parser.parse_args()
@@ -209,11 +268,10 @@ if __name__ == "__main__":
     n_outputs      = args.n_outputs
     n_events_train = args.n_events_train
     n_epochs       = args.n_epochs
-    
     layers_hidden  = args.layers_hidden
-
     loss           = args.loss
     optimizer      = args.optimizer
+    useGPU         = args.useGPU
 
     print()
     print("file_input:    " + str(file_input) )
@@ -235,7 +293,8 @@ if __name__ == "__main__":
          n_events_train,
          n_epochs,
          loss,
-         optimizer)
+         optimizer,
+         useGPU)
 
     
     ################################################################################################
@@ -244,6 +303,7 @@ if __name__ == "__main__":
     t1 = time.time()
     dt = round(t1 - t0, 0)
     dt = datetime.timedelta(seconds=dt)
-    print("Total Time: " + str(dt))
+    
+    print("Total Time: " + str(dt) + "\n")
 
 

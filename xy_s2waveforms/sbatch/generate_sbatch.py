@@ -8,17 +8,19 @@ import re
 import stat
 import sys
 
+useGPU = False
+
 
 ####################################################################################################
 ####################################################################################################
 
-#n_timesteps   = 10
+n_timesteps   = 10
 #layers_hidden = [1270]
-#layers_hidden = [1270, 127]
+layers_hidden = [1270, 127]
 
-n_timesteps   = 20
+#n_timesteps   = 20
 #layers_hidden = [2540]
-layers_hidden = [2540, 1270, 127]
+#layers_hidden = [2540, 1270, 127]
 
 #n_timesteps   = 25
 #layers_hidden = [3175]
@@ -41,7 +43,7 @@ n_channels    = 127
 n_inputs      = n_timesteps * n_channels
 n_outputs     = 2
 n_events      = 100000
-n_epochs      = 20
+n_epochs      = 10
 
 
 ####################################################################################################
@@ -65,6 +67,7 @@ if ('_' in loss_desc):
 ####################################################################################################
 
 optimizer = 'adam'
+#optimizer = 'sgdm'
 
 
 
@@ -89,19 +92,25 @@ line_cmd += "-n_outputs %d "     % n_outputs
 line_cmd += "-n_events %d "      % n_events
 line_cmd += "-n_epochs %d "      % n_epochs
 line_cmd += "-layers_hidden %s " % layers_arg
-
 line_cmd += "-loss %s "          % loss
 line_cmd += "-optimizer %s "     % optimizer
 
+if (useGPU is True): 
+    line_cmd += "-useGPU %s " % 'True'
+else:
+    line_cmd += "-useGPU %s " % 'False'
 
+    
 ####################################################################################################
 ####################################################################################################
 
 dir_output  = '/home/dbarge/reconstruction/xy_s2waveforms/sbatch/'
 dir_logs    = dir_output + '/logs'
-dir_scripts = './scripts/'
+dir_scripts = './scripts/cpu/'
 
+if (useGPU is True): dir_scripts = './scripts/gpu/'
 
+    
 ####################################################################################################
 ####################################################################################################
 
@@ -116,7 +125,6 @@ if (not os.path.isdir(dir_logs)):
 
 #SBATCH --mem=4gb
 
-useGPU = True
 
 line_python = 'source ~/.setup-ml_py364.sh'
 line_sbatch = (
@@ -133,10 +141,10 @@ if (useGPU is True):
     line_sbatch += (
                     "#SBATCH --partition=gpu2\n"
                     "#SBATCH --gres=gpu:1\n"
-                    "#SBATCH --mem=16gb\n"
+                    "#SBATCH --mem=4gb\n"
                     "#SBATCH --nodes=1\n"
                     "#SBATCH --ntasks=1\n"
-                    "#SBATCH --time=01:00:00\n"
+                    "#SBATCH --time=08:00:00\n"
                    )
 
     line_gpu = (
