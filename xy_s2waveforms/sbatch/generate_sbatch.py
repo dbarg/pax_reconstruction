@@ -96,16 +96,16 @@ line_cmd += "-loss %s "          % loss
 line_cmd += "-optimizer %s "     % optimizer
 
 if (useGPU is True): 
-    line_cmd += "-useGPU %s " % 'True'
+    line_cmd += "-useGPU %d " % 1
 else:
-    line_cmd += "-useGPU %s " % 'False'
+    line_cmd += "-useGPU %d " % 0
 
     
 ####################################################################################################
 ####################################################################################################
 
 dir_output  = '/home/dbarge/reconstruction/xy_s2waveforms/sbatch/'
-dir_logs    = dir_output + '/logs'
+dir_logs    = dir_output + 'logs/'
 dir_scripts = './scripts/'
 
 
@@ -135,8 +135,8 @@ if (not os.path.isdir(dir_logs)):
 line_python = 'source ~/.setup-ml_py364.sh'
 line_sbatch = (
                "#!/bin/bash\n\n"
-               "#SBATCH --output=%s/logs/" % dir_output + 'out_%s' % desc + '.txt' + "\n"
-               "#SBATCH --error=%s/logs/"  % dir_output + 'err_%s' % desc + '.txt' + "\n"
+               "#SBATCH --output=%s" % dir_logs + 'out_%s' % desc + '.txt' + "\n"
+               "#SBATCH --error=%s"  % dir_logs + 'err_%s' % desc + '.txt' + "\n"
                "#SBATCH --ntasks=1\n"
                "#SBATCH --account=pi-lgrandi\n\n"
               )

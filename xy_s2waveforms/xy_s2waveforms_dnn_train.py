@@ -42,8 +42,14 @@ def main(
     n_epochs,
     loss,
     optimizer,
-    useGPU):
+    arg_useGPU):
 
+    useGPU = False
+    
+    if (arg_useGPU != 0):
+        
+        useGPU = True
+        
     ################################################################################################
     ################################################################################################
     
@@ -53,15 +59,20 @@ def main(
     ################################################################################################
     ################################################################################################
     
-    result = subprocess.run(['nvidia-smi'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    code   = result.returncode
+    print(useGPU)
+    print(type(useGPU))
 
-    if (code != 0):
+    if (useGPU is True):
         
-        print("Error! CUDA not available")
-        print("'nvidia-smi' gave nonzero return code " + str(code) + "\n") 
-              
-        return
+        result = subprocess.run(['nvidia-smi'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        code   = result.returncode
+    
+        if (code != 0):
+            
+            print("Error! CUDA not available")
+            print("'nvidia-smi' gave nonzero return code " + str(code) + "\n") 
+                  
+            return
     
 
     
@@ -257,7 +268,7 @@ if __name__ == "__main__":
     parser.add_argument('-layers_hidden' , required=True, type=int, nargs="+")
     parser.add_argument('-loss'          , required=True)
     parser.add_argument('-optimizer'     , required=True)
-    parser.add_argument('-useGPU'        , required=True, type=bool)
+    parser.add_argument('-useGPU'        , required=True, type=int)
 
         
     args = parser.parse_args()
@@ -273,6 +284,8 @@ if __name__ == "__main__":
     optimizer      = args.optimizer
     useGPU         = args.useGPU
 
+    print(useGPU)
+    
     print()
     print("file_input:    " + str(file_input) )
     print("file_truth:    " + str(file_truth) )
