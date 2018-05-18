@@ -106,9 +106,15 @@ else:
 
 dir_output  = '/home/dbarge/reconstruction/xy_s2waveforms/sbatch/'
 dir_logs    = dir_output + '/logs'
-dir_scripts = './scripts/cpu/'
+dir_scripts = './scripts/'
 
-if (useGPU is True): dir_scripts = './scripts/gpu/'
+
+if (useGPU is True):
+    dir_logs    += 'gpu/'
+    dir_scripts += 'gpu/'
+else:
+    dir_logs    += 'cpu/'
+    dir_scripts += 'cpu/'
 
     
 ####################################################################################################
