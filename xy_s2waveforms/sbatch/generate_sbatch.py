@@ -29,7 +29,6 @@ layers_hidden = [1270, 127]
 #n_timesteps   = 50
 #layers_hidden = [6350]
 #layers_hidden = [6350, 2540, 1270, 127]
-#layers_hidden = [6350, 3175, 1270, 127]
 
 #n_timesteps   = 100
 #layers_hidden = [12700]
@@ -133,6 +132,8 @@ if (not os.path.isdir(dir_logs)):
 
 
 line_python = 'source ~/.setup-ml_py364.sh'
+#line_python = 'source ~/.setup-ml_gpu2.sh'
+
 line_sbatch = (
                "#!/bin/bash\n\n"
                "#SBATCH --output=%s" % dir_logs + 'out_%s' % desc + '.txt' + "\n"

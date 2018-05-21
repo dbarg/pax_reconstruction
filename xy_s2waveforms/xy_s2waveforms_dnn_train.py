@@ -59,9 +59,6 @@ def main(
     ################################################################################################
     ################################################################################################
     
-    print(useGPU)
-    print(type(useGPU))
-
     if (useGPU is True):
         
         result = subprocess.run(['nvidia-smi'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -198,8 +195,6 @@ def main(
     with open(name_cfg, 'w') as fp: json.dump(dct_config , fp)
     with open(name_hst, 'w') as fp: json.dump(dct_history, fp)
 
-    plot_model(model, to_file=name_png, show_layer_names=True, show_shapes=True)
-        
     print("\nSaved model: '" + name_h5 + "\n")
     
     
@@ -207,13 +202,16 @@ def main(
     # Predict
     ######################################################################################
     
-    test_data  = train_data [n_events_train:, :]
-    test_truth = train_truth[n_events_train:, :]
+    test_data  = np.load(file_input)
+    test_truth = np.load(file_truth)
+    
+    test_data  = test_data [n_events_train:, :]
+    test_truth = test_truth[n_events_train:, :]
     
     print("Test Input shape: " + str(test_data.shape ))
     print("Test Truth shape: " + str(test_truth.shape))
     
-    arr_pred = model.predict(train_data)
+    arr_pred = model.predict(test_data)
 
     
     ####################################################################################################
@@ -222,8 +220,8 @@ def main(
     df_out           = pd.DataFrame()
     df_out['x_pred'] = arr_pred[:, 0]
     df_out['y_pred'] = arr_pred[:, 1]
-    df_out['x_true'] = train_truth[:, 0]
-    df_out['y_true'] = train_truth[:, 1]
+    df_out['x_true'] = test_truth[:, 0]
+    df_out['y_true'] = test_truth[:, 1]
 
     dir_pred = "predictions/cpu/"
     
@@ -238,8 +236,19 @@ def main(
 
     print("\nSaved predictions: '" + file_hdf + "'\n")
 
-
     
+    ######################################################################################
+    ######################################################################################
+
+    try:
+        
+        plot_model(model, to_file=name_png, show_layer_names=True, show_shapes=True)
+        
+    except Exception as ex:
+        
+        print("\nException saving '" + name_png + str(ex) + "\n")
+
+        
     ######################################################################################
     ######################################################################################
 
