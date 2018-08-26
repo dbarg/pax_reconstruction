@@ -14,9 +14,9 @@ useGPU = False
 ####################################################################################################
 ####################################################################################################
 
-n_timesteps   = 10
+#n_timesteps   = 10
 #layers_hidden = [1270]
-layers_hidden = [1270, 127]
+#layers_hidden = [1270, 127]
 
 #n_timesteps   = 20
 #layers_hidden = [2540]
@@ -26,9 +26,9 @@ layers_hidden = [1270, 127]
 #layers_hidden = [3175]
 #layers_hidden = [3175, 1270, 127]
 
-#n_timesteps   = 50
+n_timesteps   = 50
 #layers_hidden = [6350]
-#layers_hidden = [6350, 2540, 1270, 127]
+layers_hidden = [6350, 2540, 1270, 127]
 
 #n_timesteps   = 100
 #layers_hidden = [12700]
