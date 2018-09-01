@@ -10,6 +10,17 @@ import sys
 
 useGPU = False
 
+#line_python_cpu = 'source ~/.setup-ml_py364.sh'
+#line_python_gpu = 'source ~/.setup-ml_gpu2.sh'
+
+line_python_cpu = 'source ~/project/.setup_ml_py365.sh'
+line_python_gpu = 'source ~/project/.setup_ml_py365.sh'
+
+dir_input   = '/scratch/midway2/dbarge/train_pax65/'
+
+#dir_output  = '/home/dbarge/reconstruction/xy_s2waveforms/sbatch/'
+dir_output = '/project/lgrandi/dbarge/reconstruction/xy_s2waveforms/sbatch/test'
+
 
 ####################################################################################################
 ####################################################################################################
@@ -75,64 +86,60 @@ optimizer = 'adam'
 
 layers_arg    = str(' ').join(str(x) for x in layers_hidden)
 layers_desc   = 'layers' + str(n_inputs) + '-' + str('-').join(str(x) for x in layers_hidden) + '-' + str(n_outputs)
+desc          =  ('ts%04d' % n_timesteps) + '_' + ('e%02d' % n_epochs) + '_' + loss_desc + '_' + optimizer + '_' + layers_desc 
 
-desc =  ('ts%04d' % n_timesteps) + '_' + ('e%02d' % n_epochs) + '_' + loss_desc + '_' + optimizer + '_' + layers_desc 
-
-
-dir_input     = "/scratch/midway2/dbarge/train_pax65/"
 file_input    = dir_input + "array_train_input_events000000-199999_timesteps%04d.npy" % n_timesteps
 file_truth    = dir_input + "array_train_truth_events000000-199999_timesteps%04d.npy" % n_timesteps
 
-line_cmd = "python ../xy_s2waveforms_dnn_train.py " 
-line_cmd += "-file_input %s "    % file_input
-line_cmd += "-file_truth %s "    % file_truth
-line_cmd += "-n_timesteps %d "   % n_timesteps
-line_cmd += "-n_outputs %d "     % n_outputs
-line_cmd += "-n_events %d "      % n_events
-line_cmd += "-n_epochs %d "      % n_epochs
-line_cmd += "-layers_hidden %s " % layers_arg
-line_cmd += "-loss %s "          % loss
-line_cmd += "-optimizer %s "     % optimizer
-
-if (useGPU is True): 
-    line_cmd += "-useGPU %d " % 1
-else:
-    line_cmd += "-useGPU %d " % 0
+line_cmd = "python ../xy_s2waveforms_dnn_train.py \\" 
+line_cmd += "\n\t-file_input %s \\"    % file_input
+line_cmd += "\n\t-file_truth %s \\"    % file_truth
+line_cmd += "\n\t-n_timesteps %d \\"   % n_timesteps
+line_cmd += "\n\t-n_outputs %d \\"     % n_outputs
+line_cmd += "\n\t-n_events %d \\"      % n_events
+line_cmd += "\n\t-n_epochs %d \\"      % n_epochs
+line_cmd += "\n\t-layers_hidden %s \\" % layers_arg
+line_cmd += "\n\t-loss %s \\"          % loss
+line_cmd += "\n\t-optimizer %s \\"     % optimizer
+line_cmd += "\n\t-useGPU %d \\"        % useGPU
 
     
 ####################################################################################################
 ####################################################################################################
 
-dir_output  = '/home/dbarge/reconstruction/xy_s2waveforms/sbatch/'
-dir_logs    = dir_output + 'logs/'
-dir_scripts = './scripts/'
-
+line_python = None
+dir_logs    = dir_output + '/logs/'
+dir_scripts = dir_output + '/scripts/'
 
 if (useGPU is True):
+    line_python = line_python_gpu
     dir_logs    += 'gpu/'
     dir_scripts += 'gpu/'
 else:
+    line_python = line_python_cpu
     dir_logs    += 'cpu/'
     dir_scripts += 'cpu/'
-
     
-####################################################################################################
-####################################################################################################
-
 if (not os.path.isdir(dir_logs)):
-    
-    os.mkdir(dir_logs)
+    os.makedirs(dir_logs)
     print("Created '" + dir_logs + "'")
+   
+if (not os.path.isdir(dir_scripts)):
+    os.makedirs(dir_scripts)
+    print("Created '" + dir_scripts + "'")
+
+
+    
+####################################################################################################
+####################################################################################################
+
+
 
 
 ####################################################################################################
 ####################################################################################################
 
 #SBATCH --mem=4gb
-
-
-line_python = 'source ~/.setup-ml_py364.sh'
-#line_python = 'source ~/.setup-ml_gpu2.sh'
 
 line_sbatch = (
                "#!/bin/bash\n\n"
@@ -144,7 +151,6 @@ line_sbatch = (
 
 if (useGPU is True):
 
-    line_python = 'source ~/.setup-ml_gpu2.sh'
     line_sbatch += (
                     "#SBATCH --partition=gpu2\n"
                     "#SBATCH --gres=gpu:1\n"

@@ -2,29 +2,19 @@
 ####################################################################################################
 ####################################################################################################
 
-import argparse
-import datetime
-import glob
-import json
 import os
-import pprint
-import subprocess
 import sys
-import time
 
-import numpy as np
-import pandas as pd
-import scipy as sp
+sys.path.append(os.path.abspath("/project/lgrandi/dbarge"))
 
-import keras
-from keras import layers
-from keras.callbacks import CSVLogger
-from keras.models import load_model
-from keras.utils import plot_model
 
-sys.path.append("/home/dbarge")
-from keras_utils.config_utils import *
-from keras_utils.dnn_utils import *
+####################################################################################################
+####################################################################################################
+
+import keras_utils as kutils
+
+from python_utils.python_imports import *
+from keras_utils.keras_imports import *
 
 pp = pprint.PrettyPrinter(depth=4)
 
@@ -32,28 +22,41 @@ pp = pprint.PrettyPrinter(depth=4)
 ####################################################################################################
 ####################################################################################################
 
-def main(
-    file_input,
-    file_truth,
-    n_timesteps,
-    n_outputs,
-    layers_hidden,
-    n_events_train,
-    n_epochs,
-    loss,
-    optimizer,
-    arg_useGPU):
+def main():
+
+    args = parse_arguments()
+    
+    file_input     = args.file_input
+    file_truth     = args.file_truth
+    n_timesteps    = args.n_timesteps
+    n_outputs      = args.n_outputs
+    n_events_train = args.n_events_train
+    n_epochs       = args.n_epochs
+    layers_hidden  = args.layers_hidden
+    loss           = args.loss
+    optimizer      = args.optimizer
+    useGPU         = args.useGPU
+    
+    print()
+    print("file_input:    " + str(file_input) )
+    print("file_truth:    " + str(file_truth) )
+    print()
+
+    assert(os.path.exists(file_input))
+    assert(os.path.exists(file_truth))
 
     useGPU = False
     
-    if (arg_useGPU != 0):
+    #if (arg_useGPU != 0):
         
-        useGPU = True
+    #    useGPU = True
+        
+
         
     ################################################################################################
     ################################################################################################
     
-    printVersions()
+    #printVersions()
 
     
     ################################################################################################
@@ -76,6 +79,8 @@ def main(
     ################################################################################################
     ################################################################################################
 
+    ###########################################################################
+    
     model_name  = 's2waveforms-xy'
 
     n_channels  = 127
@@ -85,6 +90,8 @@ def main(
 
     ####################################################################################################
     ####################################################################################################
+
+    print("Loading training data...")
     
     train_data  = np.load(file_input)
     train_truth = np.load(file_truth)
@@ -110,7 +117,9 @@ def main(
     # Initialize Model
     ####################################################################################################
     
-    model = dnnModel(
+    print("Loading model...")
+    
+    model = kutils.dnnModel(
         n_inputs,
         n_outputs,
         layers_hidden,
@@ -130,6 +139,8 @@ def main(
     #
     #  to do: reset model 
     ######################################################################################
+    
+    print("Training model...")
     
     history = model.fit(
         train_data,
@@ -255,17 +266,11 @@ def main(
     return
 
 
+###########################################################################
+###########################################################################
 
-####################################################################################################
-####################################################################################################
+def parse_arguments():
 
-if __name__ == "__main__":
-
-    t0 = time.time()
-    
-    ################################################################################################
-    ################################################################################################
-    
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-file_input'    , required=True)
@@ -279,48 +284,19 @@ if __name__ == "__main__":
     parser.add_argument('-optimizer'     , required=True)
     parser.add_argument('-useGPU'        , required=True, type=int)
 
-        
-    args = parser.parse_args()
-
-    file_input     = args.file_input
-    file_truth     = args.file_truth
-    n_timesteps    = args.n_timesteps
-    n_outputs      = args.n_outputs
-    n_events_train = args.n_events_train
-    n_epochs       = args.n_epochs
-    layers_hidden  = args.layers_hidden
-    loss           = args.loss
-    optimizer      = args.optimizer
-    useGPU         = args.useGPU
-
-    print(useGPU)
+    arguments = parser.parse_args()
     
-    print()
-    print("file_input:    " + str(file_input) )
-    print("file_truth:    " + str(file_truth) )
-    print()
+    return arguments
 
-    assert(os.path.exists(file_input))
-    assert(os.path.exists(file_truth))
 
-    
-    ################################################################################################
-    ################################################################################################
-    
-    main(file_input,
-         file_truth,
-         n_timesteps,
-         n_outputs,
-         layers_hidden,
-         n_events_train,
-         n_epochs,
-         loss,
-         optimizer,
-         useGPU)
+###########################################################################
+###########################################################################
 
+if __name__ == "__main__":
+
+    t0 = time.time()
     
-    ################################################################################################
-    ################################################################################################
+    main()
     
     t1 = time.time()
     dt = round(t1 - t0, 0)
