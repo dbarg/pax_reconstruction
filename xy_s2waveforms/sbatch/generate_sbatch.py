@@ -13,21 +13,25 @@ import keras_utils as kutils
 
 useGPU = False
 
-dir_input  = '/scratch/midway2/dbarge/train_pax65/'
+dir_input  = '/project/lgrandi/dbarge/reconstruction/xy_s2waveforms/train_683/'
 dir_output = '/project/lgrandi/dbarge/reconstruction/xy_s2waveforms/sbatch/'
 
 
 ####################################################################################################
 ####################################################################################################
 
-n_timesteps   = 10
+#n_timesteps   = 10
+#n_timesteps   = 19
+#n_timesteps   = 25
+n_timesteps   = 38
+
 layers_hidden = [1270, 127]
 
 n_channels    = 127
 n_inputs      = n_timesteps * n_channels
 n_outputs     = 2
-n_events      = 100 #100000
-n_epochs      = 1 #10
+n_events      = 100000
+n_epochs      = 10
 
 file_input    = dir_input + "array_train_input_events000000-199999_timesteps%04d.npy" % n_timesteps
 file_truth    = dir_input + "array_train_truth_events000000-199999_timesteps%04d.npy" % n_timesteps

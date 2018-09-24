@@ -5,7 +5,15 @@
 from python_utils.python_imports import *
 from keras_utils.keras_imports   import *
 import json
-import keras_utils as kutils
+
+import python_utils as pyutils
+import keras_utils as  kutils
+
+print()
+pyutils.printVersions()
+print()
+kutils.printVersions()
+print()
 
 
 ####################################################################################################
@@ -201,13 +209,15 @@ def main():
 
     print("\nSaved model: '" + name_h5 + "\n")
     
-    
+
+
     ######################################################################################
     # Predict
     ######################################################################################
     
     test_data  = np.load(file_input)
     test_truth = np.load(file_truth)
+
     
     test_data  = test_data [n_events_train:, :]
     test_truth = test_truth[n_events_train:, :]
@@ -236,9 +246,16 @@ def main():
 
     file_hdf = dir_pred + os.path.basename(name_h5).replace('.h5', '.hdf5')
 
-    df_out.to_hdf(file_hdf, 'df')
 
-    print("\nSaved predictions: '" + file_hdf + "'\n")
+    try:
+    
+        df_out.to_hdf(file_hdf, 'df')
+        print("\nSaved predictions: '" + file_hdf + "'\n")
+
+    except Exception as e:
+        
+        print("\nException saving prediction to: '" + file_hdf + "'")
+        print(e)
 
     
     #######################################################################################
