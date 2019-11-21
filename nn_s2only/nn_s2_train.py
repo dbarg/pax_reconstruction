@@ -46,7 +46,7 @@ class nn_xy_s2waveforms():
         #------------------------------------------------------------------------------
         #------------------------------------------------------------------------------
 
-        self.maxRows          = 1000
+        self.maxRows          = 200
         self.args             = parse_arguments()
         self.events_per_batch = self.args.events_per_batch 
         self.downsample       = self.args.downsample
@@ -314,9 +314,9 @@ class nn_xy_s2waveforms():
         
         acc         = int(100*np.round(self.history.history['acc'], 2))
         layers_desc = kutils.getModelDescription(self.model)
-        f_model     = 'nn_modl_acc{0:.0f}_{1}.h5'.format(acc, layers_desc)
-        f_pred      = 'nn_pred_acc{0:.0f}_{1}.h5'.format(acc, layers_desc)
-        f_hist      = 'nn_hist_acc{0:.0f}_{1}.h5'.format(acc, layers_desc)
+        f_model     = 'nn_modl_acc{0:.0f}_evts{1:05d}_{2}.h5'.format(acc, self.n_events_train, layers_desc)
+        f_pred      = 'nn_pred_acc{0:.0f}_evts{1:05d}_{2}.h5'.format(acc, self.n_events_train, layers_desc)
+        f_hist      = 'nn_hist_acc{0:.0f}_evts{1:05d}_{2}.h5'.format(acc, self.n_events_train, layers_desc)
 
         
         #----------------------------------------------------------------------
@@ -338,11 +338,14 @@ class nn_xy_s2waveforms():
         assert(self.hist.batches == arrHist.shape[0])
         
         # What about multiple Epochs?
+        print()
         print("Batches:          {0}".format(self.hist.batches))
         print("Events per Batch: {0}".format(self.events_per_batch))
-        print("Epochs:           {0}".format(self.self.n_epochs_train))
+        print("Epochs:           {0}".format(self.n_epochs_train))
         print("Events:           {0}".format(self.n_events_train))
 
+        assert(self.hist.batches*self.events_per_batch == self.n_events_train)
+        
         
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
