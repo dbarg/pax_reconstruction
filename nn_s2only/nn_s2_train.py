@@ -59,8 +59,9 @@ class nn_xy_s2waveforms():
         self.max_dirs         = min(self.args.max_dirs, 9)
         self.lst_dir_files    = glob.glob(dir_data + "/strArr*.npz")
         self.lst_dir_files    = sorted(self.lst_dir_files)
-        self.lst_files_train  = self.lst_dir_files[0:min(self.max_dirs,7)]
-        self.lst_files_test   = self.lst_dir_files[7:8]
+        self.lst_files_train  = self.lst_dir_files[:self.max_dirs]
+        self.lst_files_test   = self.lst_dir_files[self.max_dirs+1:self.max_dirs+2]
+        
         n_dir                 = len(self.lst_dir_files)
         n_files_test          = len(self.lst_files_test)
         n_files_train         = len(self.lst_files_train)
@@ -70,6 +71,8 @@ class nn_xy_s2waveforms():
         self.arr2d_pred       = np.zeros(shape=(self.maxRows*n_files_test, 6))
 
         assert(1000 % self.downsample == 0)
+        assert(self.input_dim % 127 == 0)
+        
         
         #------------------------------------------------------------------------------
         #------------------------------------------------------------------------------
