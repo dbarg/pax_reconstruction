@@ -64,7 +64,7 @@ class nn_xy_s2waveforms():
         n_dir                 = len(self.lst_dir_files)
         n_files_test          = len(self.lst_files_test)
         n_files_train         = len(self.lst_files_train)
-        n_events              = n_files_train*self.maxRows
+        self.n_events_train   = n_files_train*self.maxRows
         
         self.n_epochs_train   = int( (self.maxRows) / (self.events_per_batch) )*n_files_train
         self.arr2d_pred       = np.zeros(shape=(self.maxRows*n_files_test, 6))
@@ -79,7 +79,7 @@ class nn_xy_s2waveforms():
         print("Input dimension:  {0}".format(self.input_dim))
         print("Batches:          {0}".format(self.n_batches))
         print("Events per batch: {0}".format(self.events_per_batch))
-        print("Events:           {0}".format(n_events))
+        print("Events:           {0}".format(self.n_events_train))
         
         print("Train files: \n")
         for x in (self.lst_files_train):
@@ -282,7 +282,7 @@ class nn_xy_s2waveforms():
         self.history = self.model.fit_generator(
             self.generator_waveform_xy(0),
             initial_epoch=0,
-            steps_per_epoch=3,#self.n_epochs_train,
+            steps_per_epoch=2,#self.n_epochs_train,
             epochs=1,
             shuffle=False,
             verbose=1,
@@ -312,13 +312,11 @@ class nn_xy_s2waveforms():
         #   dropout rate, learning rate
         #----------------------------------------------------------------------
         
-        acc         = np.round(self.history.history['acc'], 2)
-        print(acc)
-        acc         = 69
+        acc         = int(100*np.round(self.history.history['acc'], 2))
         layers_desc = kutils.getModelDescription(self.model)
-        f_model     = 'nn_modl_acc{0:.0f}_{1}.h5'.format(acc*100, layers_desc)
-        f_pred      = 'nn_pred_acc{0:.0f}_{1}.h5'.format(acc*100, layers_desc)
-        f_hist      = 'nn_hist_acc{0:.0f}_{1}.h5'.format(acc*100, layers_desc)
+        f_model     = 'nn_modl_acc{0:.0f}_{1}.h5'.format(acc, layers_desc)
+        f_pred      = 'nn_pred_acc{0:.0f}_{1}.h5'.format(acc, layers_desc)
+        f_hist      = 'nn_hist_acc{0:.0f}_{1}.h5'.format(acc, layers_desc)
 
         
         #----------------------------------------------------------------------
@@ -331,17 +329,19 @@ class nn_xy_s2waveforms():
               
         self.model.save(f_model)                                # Model
         np.save(f_pred, self.arr2d_pred)                        # Predictions
-        
-        # To Do: add epoch time
-        arrHist      = np.zeros(shape=(len(self.hist.accs), 2)) # History
-        arrHist[:,:] = np.array(self.hist.losses), np.array(self.hist.accs)
+        arrHist      = np.zeros(shape=(len(self.hist.accs), 3)) # History
+        arrHist[:,0] = np.array(self.hist.losses)
+        arrHist[:,1] = np.array(self.hist.accs)
+        arrHist[:,2] = np.array(self.hist.times)
         np.save(f_hist, arrHist)   
 
-        # Samples Seen
-        print("Samples {0}".format(self.model.updates.count()))
-
-            
-        assert(self.n_epochs_train == arrHist.shape[0])
+        assert(self.hist.batches == arrHist.shape[0])
+        
+        # What about multiple Epochs?
+        print("Batches:          {0}".format(self.hist.batches))
+        print("Events per Batch: {0}".format(self.events_per_batch))
+        print("Epochs:           {0}".format(self.self.n_epochs_train))
+        print("Events:           {0}".format(self.n_events_train))
 
         
         #----------------------------------------------------------------------
