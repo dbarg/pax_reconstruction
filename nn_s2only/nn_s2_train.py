@@ -7,10 +7,17 @@ import glob
 import keras
 import numpy as np
 import os
+import pickle
 import psutil
 import time
 
 import ipca_helpers
+import utils_keras as kutils
+
+import keras
+#from keras.callbacks import Callback
+#import keras.callbacks.Callback
+
 import utils_keras as kutils
 
 proc = psutil.Process(os.getpid())
@@ -39,24 +46,26 @@ class nn_xy_s2waveforms():
         #------------------------------------------------------------------------------
         #------------------------------------------------------------------------------
 
-        self.maxRows          = 10000
+        self.maxRows          = 1000
         self.args             = parse_arguments()
         self.events_per_batch = self.args.events_per_batch 
-        self.n_batches        = int(self.maxRows/self.events_per_batch)
         self.downsample       = self.args.downsample
-        self.max_dirs         = min(self.args.max_dirs, 9)
-        self.input_dim        = int(127000/self.downsample)
         dir_data              = self.args.directory
-        self.lst_dir_files    = glob.glob(dir_data + "/arr2*.npy")
+        self.n_batches        = int(self.maxRows/self.events_per_batch)
+        self.input_dim        = int(127000/self.downsample)
+
+        assert(os.path.exists(dir_data))
+
+        self.max_dirs         = min(self.args.max_dirs, 9)
+        self.lst_dir_files    = glob.glob(dir_data + "/strArr*.npz")
         self.lst_dir_files    = sorted(self.lst_dir_files)
-        n_dir                 = len(self.lst_dir_files)
         self.lst_files_train  = self.lst_dir_files[0:min(self.max_dirs,7)]
         self.lst_files_test   = self.lst_dir_files[7:8]
+        n_dir                 = len(self.lst_dir_files)
         n_files_test          = len(self.lst_files_test)
         n_files_train         = len(self.lst_files_train)
-        n_events              = n_dir*self.maxRows
-        dir_data              = '../data_input_pax/v2019-11-09'
-        lst_dir_files         = glob.glob(dir_data + "/arr2*.npy")
+        n_events              = n_files_train*self.maxRows
+        
         self.n_epochs_train   = int( (self.maxRows) / (self.events_per_batch) )*n_files_train
         self.arr2d_pred       = np.zeros(shape=(self.maxRows*n_files_test, 6))
 
@@ -65,8 +74,9 @@ class nn_xy_s2waveforms():
         #------------------------------------------------------------------------------
         #------------------------------------------------------------------------------
         
+        print("Input Directory:  {0}".format(dir_data))
         print("Downsample:       {0}".format(self.downsample))
-        print("Input diimension: {0}".format(self.input_dim))
+        print("Input dimension:  {0}".format(self.input_dim))
         print("Batches:          {0}".format(self.n_batches))
         print("Events per batch: {0}".format(self.events_per_batch))
         print("Events:           {0}".format(n_events))
@@ -80,22 +90,11 @@ class nn_xy_s2waveforms():
             print("   " + x)
   
 
-        #------------------------------------------------------------------------------
-        #------------------------------------------------------------------------------
-        
-        self.dnn_model_xe1t = kutils.dnnModel(
-             self.input_dim,
-             2,
-             [127],
-             'elu',
-             loss='mean_squared_error',
-             optimizer='adam',
-             keep_rate=0.00005
-        )
-        
         
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
+    
+        self.init_model()
         
         return
    
@@ -104,21 +103,37 @@ class nn_xy_s2waveforms():
     #------------------------------------------------------------------------------
     #------------------------------------------------------------------------------
     
-    def waveform_xy_generator(self, x):
+    def func_yield(self, arr2d_batch, arr2d_xy):
+        
+          yield(
+              {'dense_1_input': arr2d_batch},
+              {'dense_3'      : arr2d_xy}
+          )
+        
+    
+    #------------------------------------------------------------------------------
+    #------------------------------------------------------------------------------
+    
+    def generator_waveform_xy(self, x):
+        
+        print("generator_waveform_xy")
         
         while(True):
+            
+            print("while")
             
             #------------------------------------------------------------------------------
             #------------------------------------------------------------------------------
     
             for iFile, fpath in enumerate(self.lst_files_train):
-    
+        
                 #----------------------------------------------------------------------
                 #----------------------------------------------------------------------
 
                 print("\n   Loading data file: {0} ...".format(fpath))
 
-                sArr     = np.load(fpath)
+                #sArr     = np.load(fpath)
+                sArr     = np.load(fpath)['arr_0']
                 sArr     = sArr[0:self.maxRows][:][:]
                 arr3d    = sArr[:][:]['image']
                 arr3d_ds = ipca_helpers.downsample_arr3d(arr3d, self.downsample)
@@ -137,17 +152,18 @@ class nn_xy_s2waveforms():
                     arr3d_batch    = arr3d_ds[i0:i1+1][:] 
                     arr2d_batch    = arr3d_batch.reshape(arr3d_batch.shape[0], arr3d_batch.shape[1]*arr3d_batch.shape[2])
                     arr2d_xy       = np.zeros(shape=(arr2d_batch.shape[0], 2))
-                    arr2d_xy[:, 0] = sArr[i0:i1+1][:]['x_true']
-                    arr2d_xy[:, 1] = sArr[i0:i1+1][:]['y_true']
+                    arr2d_xy[:, 0] = sArr[i0:i1+1][:]['true_x']
+                    arr2d_xy[:, 1] = sArr[i0:i1+1][:]['true_y']
         
-                    print("\n   Processing Input Data: Fitting batch {0}/{1}   (events: {2}-{3})".format(
+                    print("   NN Fitting batch {0}/{1}   (events: {2}-{3})   (Memory Usage: {4} GB)".format(
                         ibatch+1,
                         self.n_batches,
-                        i0,
-                        i1
+                        j0,
+                        j1,
+                        getMemoryGB(proc)
                     ))
-                    
-                    print("    -> Memory Usage: {0} GB".format(getMemoryGB(proc)))
+        
+                    #self.func_yield(arr2d_batch, arr2d_xy)
         
                     yield(
                         {'dense_1_input': arr2d_batch},
@@ -168,7 +184,7 @@ class nn_xy_s2waveforms():
     #------------------------------------------------------------------------------
     #------------------------------------------------------------------------------
     
-    def test(self):
+    def validate_model(self):
         
         print("\n--- Test ---")
         
@@ -219,7 +235,7 @@ class nn_xy_s2waveforms():
                 
                 print("Predict...")
                 
-                arr2d_xy_pred = self.dnn_model_xe1t.predict(arr2d_batch)
+                arr2d_xy_pred = self.model.predict(arr2d_batch)
         
                 self.arr2d_pred[i0:i1, 0] = arr2d_xy[:,0]
                 self.arr2d_pred[i0:i1, 1] = arr2d_xy[:,1]
@@ -248,20 +264,31 @@ class nn_xy_s2waveforms():
     #--------------------------------------------------------------------------
     #--------------------------------------------------------------------------
     
+    def init_model(self):
+        
+        self.model = kutils.dnn_regression(self.input_dim, 2, [127])
+        self.hist  = kutils.logHistory()
+        
+        return
+
+    
+    #--------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
+    
     def train(self):
         
         print("\n--- Train ---")
         
-        self.dnn_model_xe1t.fit_generator(
-            self.waveform_xy_generator(0),
+        self.history = self.model.fit_generator(
+            self.generator_waveform_xy(0),
             initial_epoch=0,
-            steps_per_epoch=self.n_epochs_train,
+            steps_per_epoch=3,#self.n_epochs_train,
             epochs=1,
             shuffle=False,
             verbose=1,
             workers=1,
             use_multiprocessing=False,
-            #callbacks=[self.my_callback],
+            callbacks=[self.hist]
             #validation_data=None,
             #validation_steps=None,
             #validation_freq=1,
@@ -269,7 +296,8 @@ class nn_xy_s2waveforms():
             #max_queue_size=10,
         )
         
-        print(self.dnn_model_xe1t.summary())
+        print(self.model.summary())
+
         
         return
 
@@ -278,13 +306,47 @@ class nn_xy_s2waveforms():
     #--------------------------------------------------------------------------
     
     def save(self):
+    
+        #----------------------------------------------------------------------
+        # To Do, Add:
+        #   dropout rate, learning rate
+        #----------------------------------------------------------------------
         
-        print("\n--- Save ---")
+        acc         = np.round(self.history.history['acc'], 2)
+        print(acc)
+        acc         = 69
+        layers_desc = kutils.getModelDescription(self.model)
+        f_model     = 'nn_modl_acc{0:.0f}_{1}.h5'.format(acc*100, layers_desc)
+        f_pred      = 'nn_pred_acc{0:.0f}_{1}.h5'.format(acc*100, layers_desc)
+        f_hist      = 'nn_hist_acc{0:.0f}_{1}.h5'.format(acc*100, layers_desc)
+
         
-        self.dnn_model_xe1t.save('nn_model.h5')
+        #----------------------------------------------------------------------
+        # Save
+        #----------------------------------------------------------------------
         
-        np.save('nn_pred', self.arr2d_pred)
+        print()
+        print("Saving '{0}'...".format(f_model))
+        print("Saving '{0}'...".format(f_pred))
+              
+        self.model.save(f_model)                                # Model
+        np.save(f_pred, self.arr2d_pred)                        # Predictions
+        
+        # To Do: add epoch time
+        arrHist      = np.zeros(shape=(len(self.hist.accs), 2)) # History
+        arrHist[:,:] = np.array(self.hist.losses), np.array(self.hist.accs)
+        np.save(f_hist, arrHist)   
+
+        # Samples Seen
+        print("Samples {0}".format(self.model.updates.count()))
+
             
+        assert(self.n_epochs_train == arrHist.shape[0])
+
+        
+        #----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        
         return
     
     
@@ -297,7 +359,6 @@ def parse_arguments():
     parser.add_argument('-max_dirs'        , required=True, type=int)
     parser.add_argument('-directory'       , required=True)
     parser.add_argument('-events_per_batch', required=True, type=int)
-    parser.add_argument('-components'      , required=True, type=int)
     parser.add_argument('-samples'         , required=True, type=int)
     parser.add_argument('-downsample'      , required=True, type=int)
     
@@ -317,7 +378,7 @@ if (__name__ == "__main__"):
     
     nn = nn_xy_s2waveforms()
     nn.train()
-    nn.test()
+    #nn.validate_model()
     nn.save()
     
     t2 = time.time()
