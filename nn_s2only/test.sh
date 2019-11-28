@@ -15,5 +15,5 @@
 cd ${HOME}/dali/pax_reconstruction/nn_s2only
 source ~/.bash/.setup_pax_head.sh
 
-python ./nn_s2_train.py -directory ../../xe1t-processing/pax_merge/temp_s2/ -max_dirs 10 -events_per_batch 100 -samples 1000 -downsample 100
+python ./nn_s2_train.py -directory ../../xe1t-processing/pax_merge/temp_s2/ -max_dirs 20 -events_per_batch 100 -samples 1000 -downsample 5
 

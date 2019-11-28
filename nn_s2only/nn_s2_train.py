@@ -46,7 +46,7 @@ class nn_xy_s2waveforms():
         #------------------------------------------------------------------------------
         #------------------------------------------------------------------------------
 
-        self.maxRows          = 200
+        self.maxRows          = 1000
         self.args             = parse_arguments()
         self.events_per_batch = self.args.events_per_batch 
         self.downsample       = self.args.downsample
@@ -58,9 +58,10 @@ class nn_xy_s2waveforms():
 
         self.max_dirs         = min(self.args.max_dirs, 9)
         self.lst_dir_files    = glob.glob(dir_data + "/strArr*.npz")
-        self.lst_dir_files    = sorted(self.lst_dir_files)
-        self.lst_files_train  = self.lst_dir_files[:self.max_dirs]
-        self.lst_files_test   = self.lst_dir_files[self.max_dirs+1:self.max_dirs+2]
+        self.lst_dir_files.sort()
+        self.lst_dir_files.sort(key=len)
+        self.lst_files_train  = self.lst_dir_files[0:self.max_dirs+1]
+        self.lst_files_test   = self.lst_dir_files[self.max_dirs+2:self.max_dirs+3]
         
         n_dir                 = len(self.lst_dir_files)
         n_files_test          = len(self.lst_files_test)
@@ -149,9 +150,13 @@ class nn_xy_s2waveforms():
 
                 for ibatch in range(0, self.n_batches):
 
-                    i0  = int(ibatch*self.events_per_batch)
-                    i1  = int(i0 + self.events_per_batch - 1)
+                    i0 = int(ibatch*self.events_per_batch)
+                    i1 = int(i0 + self.events_per_batch - 1)
  
+                    j0 = i0 + iFile*self.maxRows
+                    #j1  = j0 + self.maxRows - 1
+                    j1 = j0 + self.events_per_batch
+        
                     arr3d_batch    = arr3d_ds[i0:i1+1][:] 
                     arr2d_batch    = arr3d_batch.reshape(arr3d_batch.shape[0], arr3d_batch.shape[1]*arr3d_batch.shape[2])
                     arr2d_xy       = np.zeros(shape=(arr2d_batch.shape[0], 2))
@@ -285,10 +290,10 @@ class nn_xy_s2waveforms():
         self.history = self.model.fit_generator(
             self.generator_waveform_xy(0),
             initial_epoch=0,
-            steps_per_epoch=2,#self.n_epochs_train,
+            steps_per_epoch=self.n_epochs_train,
             epochs=1,
             shuffle=False,
-            verbose=1,
+            verbose=2,
             workers=1,
             use_multiprocessing=False,
             callbacks=[self.hist]
