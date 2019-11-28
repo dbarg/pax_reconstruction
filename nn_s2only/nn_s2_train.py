@@ -12,12 +12,8 @@ import psutil
 import time
 
 import ipca_helpers
-import utils_keras as kutils
 
 import keras
-#from keras.callbacks import Callback
-#import keras.callbacks.Callback
-
 import utils_keras as kutils
 
 proc = psutil.Process(os.getpid())
@@ -60,8 +56,8 @@ class nn_xy_s2waveforms():
         self.lst_dir_files    = glob.glob(dir_data + "/strArr*.npz")
         self.lst_dir_files.sort()
         self.lst_dir_files.sort(key=len)
-        self.lst_files_train  = self.lst_dir_files[0:self.max_dirs+1]
-        self.lst_files_test   = self.lst_dir_files[self.max_dirs+2:self.max_dirs+3]
+        self.lst_files_train  = self.lst_dir_files[0:self.max_dirs]
+        self.lst_files_test   = self.lst_dir_files[self.max_dirs+1:self.max_dirs+2]
         
         n_dir                 = len(self.lst_dir_files)
         n_files_test          = len(self.lst_files_test)
@@ -92,8 +88,6 @@ class nn_xy_s2waveforms():
         print("Test files: \n")
         for x in (self.lst_files_test):
             print("   " + x)
-  
-
         
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
@@ -102,18 +96,6 @@ class nn_xy_s2waveforms():
         
         return
    
-    
-    
-    #------------------------------------------------------------------------------
-    #------------------------------------------------------------------------------
-    
-    def func_yield(self, arr2d_batch, arr2d_xy):
-        
-          yield(
-              {'dense_1_input': arr2d_batch},
-              {'dense_3'      : arr2d_xy}
-          )
-        
     
     #------------------------------------------------------------------------------
     #------------------------------------------------------------------------------
@@ -136,45 +118,40 @@ class nn_xy_s2waveforms():
 
                 print("\n   Loading data file: {0} ...".format(fpath))
 
-                #sArr     = np.load(fpath)
-                sArr     = np.load(fpath)['arr_0']
-                sArr     = sArr[0:self.maxRows][:][:]
-                arr3d    = sArr[:][:]['image']
-                arr3d_ds = ipca_helpers.downsample_arr3d(arr3d, self.downsample)
-                j0       = iFile*self.maxRows
-                j1       = j0 + self.maxRows - 1
-
-
+                sArr        = np.load(fpath)['arr_0']
+                sArr        = sArr[0:self.maxRows][:][:]
+                arr3d       = sArr[:][:]['image']
+                arr3d_ds    = ipca_helpers.downsample_arr3d(arr3d, self.downsample)
+                
+                
                 #----------------------------------------------------------------------
                 #----------------------------------------------------------------------
 
                 for ibatch in range(0, self.n_batches):
 
                     i0 = int(ibatch*self.events_per_batch)
-                    i1 = int(i0 + self.events_per_batch - 1)
- 
-                    j0 = i0 + iFile*self.maxRows
-                    #j1  = j0 + self.maxRows - 1
-                    j1 = j0 + self.events_per_batch
-        
-                    arr3d_batch    = arr3d_ds[i0:i1+1][:] 
+                    i1 = int(i0 + self.events_per_batch)
+                    
+                    arr3d_batch    = arr3d_ds[i0:i1][:] 
                     arr2d_batch    = arr3d_batch.reshape(arr3d_batch.shape[0], arr3d_batch.shape[1]*arr3d_batch.shape[2])
                     arr2d_xy       = np.zeros(shape=(arr2d_batch.shape[0], 2))
-                    arr2d_xy[:, 0] = sArr[i0:i1+1][:]['true_x']
-                    arr2d_xy[:, 1] = sArr[i0:i1+1][:]['true_y']
+                    arr2d_xy[:, 0] = sArr[i0:i1][:]['true_x']
+                    arr2d_xy[:, 1] = sArr[i0:i1][:]['true_y']
+                    #arr_s2areas_batch = sArr[i0:i1][:]['s2_areas']
         
-                    print("   NN Fitting batch {0}/{1}   (events: {2}-{3})   (Memory Usage: {4} GB)".format(
-                        ibatch+1,
-                        self.n_batches,
-                        j0,
-                        j1,
-                        getMemoryGB(proc)
-                    ))
+                    j0 = i0 + iFile*self.maxRows
+                    j1 = j0 + self.events_per_batch
+                    
         
-                    #self.func_yield(arr2d_batch, arr2d_xy)
-        
+                    print("   NN Fitting batch {0}/{1}".format(ibatch+1, self.n_batches))
+                    print("      Events: {0}-{1}".format(j0, j1))
+                    print("      Index:  {0}-{1}".format(i0, i1))
+                    print("      Memory: {0} GB".format(getMemoryGB(proc)))
+                    print()
+                    
                     yield(
                         {'dense_1_input': arr2d_batch},
+                        #{'dense_1_input': arr_s2areas},
                         {'dense_3'      : arr2d_xy}
                     )
 
@@ -192,89 +169,90 @@ class nn_xy_s2waveforms():
     #------------------------------------------------------------------------------
     #------------------------------------------------------------------------------
     
-    def validate_model(self):
-        
-        print("\n--- Test ---")
-        
-        #------------------------------------------------------------------------------
-        #------------------------------------------------------------------------------
-    
-        for iFile, fpath in enumerate(self.lst_files_test):
-    
-            #----------------------------------------------------------------------
-            #----------------------------------------------------------------------
-
-            print("\n   Loading data file: {0} ...".format(fpath))
-
-            sArr     = np.load(fpath)
-            sArr     = sArr[0:self.maxRows][:][:]
-            arr3d    = sArr[:][:]['image']
-            arr3d_ds = ipca_helpers.downsample_arr3d(arr3d, self.downsample)
-            j0       = iFile*self.maxRows
-            j1       = j0 + self.maxRows - 1
-
-
-            #----------------------------------------------------------------------
-            #----------------------------------------------------------------------
-
-            for ibatch in range(0, self.n_batches):
-
-                i0  = int(ibatch*self.events_per_batch)
-                i1  = int(i0 + self.events_per_batch)
- 
-                arr3d_batch       = arr3d_ds[i0:i1][:] 
-                arr2d_batch       = arr3d_batch.reshape(arr3d_batch.shape[0], arr3d_batch.shape[1]*arr3d_batch.shape[2])
-                
-                arr2d_xy          = np.zeros(shape=(arr2d_batch.shape[0], 2))
-                arr2d_xy_s2       = np.zeros(shape=(arr2d_batch.shape[0], 2))
-                arr2d_xy[:, 0]    = sArr[i0:i1][:]['x_true']
-                arr2d_xy[:, 1]    = sArr[i0:i1][:]['y_true']
-                arr2d_xy_s2[:, 0] = sArr[i0:i1][:]['x_s2']
-                arr2d_xy_s2[:, 1] = sArr[i0:i1][:]['y_s2']
-                
-                print("\n   Evaluating Input Data: Predict batch {0}/{1}   (events: {2}-{3})".format(
-                    ibatch+1,
-                    self.n_batches,
-                    i0,
-                    i1
-                ))
-                
-                print("    -> Memory Usage: {0} GB".format(getMemoryGB(proc)))
-                
-                print("Predict...")
-                
-                arr2d_xy_pred = self.model.predict(arr2d_batch)
-        
-                self.arr2d_pred[i0:i1, 0] = arr2d_xy[:,0]
-                self.arr2d_pred[i0:i1, 1] = arr2d_xy[:,1]
-                self.arr2d_pred[i0:i1, 2] = arr2d_xy_s2[:,0]
-                self.arr2d_pred[i0:i1, 3] = arr2d_xy_s2[:,1]
-                self.arr2d_pred[i0:i1, 4] = arr2d_xy_pred[:,0]
-                self.arr2d_pred[i0:i1, 5] = arr2d_xy_pred[:,1]
-            
-                #for i in range(0, 100):
-                #    print()
-                #    print("true (x,y) = ({0}, {1})".format(self.arr2d_pred[i, 0], self.arr2d_pred[i, 1]))
-                #    print("reco (x,y) = ({0}, {1})".format(self.arr2d_pred[i, 2], self.arr2d_pred[i, 3]))
-                #    print("pred (x,y) = ({0}, {1})".format(self.arr2d_pred[i, 4], self.arr2d_pred[i, 5]))
-                      
-                continue
-            
-
-            #----------------------------------------------------------------------
-            #----------------------------------------------------------------------
-
-            continue
-    
-        return
+#    def validate_model(self):
+#        
+#        print("\n--- Test ---")
+#        
+#        #------------------------------------------------------------------------------
+#        #------------------------------------------------------------------------------
+#    
+#        for iFile, fpath in enumerate(self.lst_files_test):
+#    
+#            #----------------------------------------------------------------------
+#            #----------------------------------------------------------------------
+#
+#            print("\n   Loading data file: {0} ...".format(fpath))
+#
+#            sArr     = np.load(fpath)
+#            sArr     = sArr[0:self.maxRows][:][:]
+#            arr3d    = sArr[:][:]['image']
+#            arr3d_ds = ipca_helpers.downsample_arr3d(arr3d, self.downsample)
+#            j0       = iFile*self.maxRows
+#            j1       = j0 + self.maxRows - 1
+#
+#
+#            #----------------------------------------------------------------------
+#            #----------------------------------------------------------------------
+#
+#            for ibatch in range(0, self.n_batches):
+#
+#                i0  = int(ibatch*self.events_per_batch)
+#                i1  = int(i0 + self.events_per_batch)
+# 
+#                arr3d_batch       = arr3d_ds[i0:i1][:] 
+#                arr2d_batch       = arr3d_batch.reshape(arr3d_batch.shape[0], arr3d_batch.shape[1]*arr3d_batch.shape[2])
+#                
+#                arr2d_xy          = np.zeros(shape=(arr2d_batch.shape[0], 2))
+#                arr2d_xy_s2       = np.zeros(shape=(arr2d_batch.shape[0], 2))
+#                arr2d_xy[:, 0]    = sArr[i0:i1][:]['x_true']
+#                arr2d_xy[:, 1]    = sArr[i0:i1][:]['y_true']
+#                arr2d_xy_s2[:, 0] = sArr[i0:i1][:]['x_s2']
+#                arr2d_xy_s2[:, 1] = sArr[i0:i1][:]['y_s2']
+#                
+#                print("\n   Evaluating Input Data: Predict batch {0}/{1}   (events: {2}-{3})".format(
+#                    ibatch+1,
+#                    self.n_batches,
+#                    i0,
+#                    i1
+#                ))
+#                
+#                print("    -> Memory Usage: {0} GB".format(getMemoryGB(proc)))
+#                
+#                print("Predict...")
+#                
+#                arr2d_xy_pred = self.model.predict(arr2d_batch)
+#        
+#                self.arr2d_pred[i0:i1, 0] = arr2d_xy[:,0]
+#                self.arr2d_pred[i0:i1, 1] = arr2d_xy[:,1]
+#                self.arr2d_pred[i0:i1, 2] = arr2d_xy_s2[:,0]
+#                self.arr2d_pred[i0:i1, 3] = arr2d_xy_s2[:,1]
+#                self.arr2d_pred[i0:i1, 4] = arr2d_xy_pred[:,0]
+#                self.arr2d_pred[i0:i1, 5] = arr2d_xy_pred[:,1]
+#            
+#                #for i in range(0, 100):
+#                #    print()
+#                #    print("true (x,y) = ({0}, {1})".format(self.arr2d_pred[i, 0], self.arr2d_pred[i, 1]))
+#                #    print("reco (x,y) = ({0}, {1})".format(self.arr2d_pred[i, 2], self.arr2d_pred[i, 3]))
+#                #    print("pred (x,y) = ({0}, {1})".format(self.arr2d_pred[i, 4], self.arr2d_pred[i, 5]))
+#                      
+#                continue
+#            
+#
+#            #----------------------------------------------------------------------
+#            #----------------------------------------------------------------------
+#
+#            continue
+#    
+#        return
         
 
     #--------------------------------------------------------------------------
     #--------------------------------------------------------------------------
     
     def init_model(self):
-        
+
         self.model = kutils.dnn_regression(self.input_dim, 2, [127])
+        #self.model = kutils.dnn_regression(127, 2, [127])
         self.hist  = kutils.logHistory()
         
         return
@@ -293,10 +271,10 @@ class nn_xy_s2waveforms():
             steps_per_epoch=self.n_epochs_train,
             epochs=1,
             shuffle=False,
-            verbose=2,
+            verbose=1,
             workers=1,
-            use_multiprocessing=False,
-            callbacks=[self.hist]
+            use_multiprocessing=False#,
+            #callbacks=[self.hist]
             #validation_data=None,
             #validation_steps=None,
             #validation_freq=1,
@@ -323,8 +301,8 @@ class nn_xy_s2waveforms():
         acc         = int(100*np.round(self.history.history['acc'], 2))
         layers_desc = kutils.getModelDescription(self.model)
         f_model     = 'nn_modl_acc{0:.0f}_evts{1:05d}_{2}.h5'.format(acc, self.n_events_train, layers_desc)
-        f_pred      = 'nn_pred_acc{0:.0f}_evts{1:05d}_{2}.h5'.format(acc, self.n_events_train, layers_desc)
-        f_hist      = 'nn_hist_acc{0:.0f}_evts{1:05d}_{2}.h5'.format(acc, self.n_events_train, layers_desc)
+        f_pred      = 'nn_pred_acc{0:.0f}_evts{1:05d}_{2}.npy'.format(acc, self.n_events_train, layers_desc)
+        f_hist      = 'nn_hist_acc{0:.0f}_evts{1:05d}_{2}.npy'.format(acc, self.n_events_train, layers_desc)
 
         
         #----------------------------------------------------------------------
@@ -336,12 +314,12 @@ class nn_xy_s2waveforms():
         print("Saving '{0}'...".format(f_pred))
               
         self.model.save(f_model)                                # Model
-        np.save(f_pred, self.arr2d_pred)                        # Predictions
+        np.save(f_pred.replace('.npy', ''), self.arr2d_pred)                        # Predictions
         arrHist      = np.zeros(shape=(len(self.hist.accs), 3)) # History
         arrHist[:,0] = np.array(self.hist.losses)
         arrHist[:,1] = np.array(self.hist.accs)
         arrHist[:,2] = np.array(self.hist.times)
-        np.save(f_hist, arrHist)   
+        np.save(f_hist.replace('.npy', ''), arrHist)   
 
         assert(self.hist.batches == arrHist.shape[0])
         
@@ -367,8 +345,8 @@ class nn_xy_s2waveforms():
 def parse_arguments():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-max_dirs'        , required=True, type=int)
     parser.add_argument('-directory'       , required=True)
+    parser.add_argument('-max_dirs'        , required=True, type=int)
     parser.add_argument('-events_per_batch', required=True, type=int)
     parser.add_argument('-samples'         , required=True, type=int)
     parser.add_argument('-downsample'      , required=True, type=int)
@@ -390,7 +368,7 @@ if (__name__ == "__main__"):
     nn = nn_xy_s2waveforms()
     nn.train()
     #nn.validate_model()
-    nn.save()
+    #nn.save()
     
     t2 = time.time()
     dt = (t2 - t1)/60
