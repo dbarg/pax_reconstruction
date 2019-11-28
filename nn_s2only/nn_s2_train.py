@@ -132,22 +132,36 @@ class nn_xy_s2waveforms():
                     i0 = int(ibatch*self.events_per_batch)
                     i1 = int(i0 + self.events_per_batch)
                     
-                    arr3d_batch    = arr3d_ds[i0:i1][:] 
-                    arr2d_batch    = arr3d_batch.reshape(arr3d_batch.shape[0], arr3d_batch.shape[1]*arr3d_batch.shape[2])
-                    arr2d_xy       = np.zeros(shape=(arr2d_batch.shape[0], 2))
-                    arr2d_xy[:, 0] = sArr[i0:i1][:]['true_x']
-                    arr2d_xy[:, 1] = sArr[i0:i1][:]['true_y']
-                    #arr_s2areas_batch = sArr[i0:i1][:]['s2_areas']
+                    arr3d_batch       = arr3d_ds[i0:i1][:] 
+                    arr2d_batch       = arr3d_batch.reshape(arr3d_batch.shape[0], arr3d_batch.shape[1]*arr3d_batch.shape[2])
+                    arr2d_xy          = np.zeros(shape=(arr2d_batch.shape[0], 2))
+                    arr2d_xy[:, 0]    = sArr[i0:i1][:]['true_x']
+                    arr2d_xy[:, 1]    = sArr[i0:i1][:]['true_y']
+                    arr_s2areas_batch = sArr[i0:i1][:]['s2_areas']
         
                     j0 = i0 + iFile*self.maxRows
                     j1 = j0 + self.events_per_batch
+
+                
+                    tst = np.sum(arr3d_batch, axis=2)
+                    sum_s2areas = np.sum(arr_s2areas_batch[0,:])
+                    sum_tst = np.sum(tst[0,:])
                     
-        
-                    print("   NN Fitting batch {0}/{1}".format(ibatch+1, self.n_batches))
-                    print("      Events: {0}-{1}".format(j0, j1))
-                    print("      Index:  {0}-{1}".format(i0, i1))
-                    print("      Memory: {0} GB".format(getMemoryGB(proc)))
-                    print()
+                    #print()
+                    #print(sum_s2areas)
+                    #print(sum_tst)
+                    #print()
+                    #assert(False)
+                    
+                    #print(arr2d_xy[0, 0])
+                    #print(arr2d_xy[0, 1])
+                    #print(sArr[i0:i1][:]['x_s2'])
+            
+                    if (False):
+                        print("   NN Fitting batch {0}/{1}".format(ibatch+1, self.n_batches))
+                        print("      Events: {0}-{1}".format(j0, j1))
+                        print("      Index:  {0}-{1}".format(i0, i1))
+                        print("      Memory: {0} GB".format(getMemoryGB(proc)))
                     
                     yield(
                         {'dense_1_input': arr2d_batch},
@@ -273,8 +287,8 @@ class nn_xy_s2waveforms():
             shuffle=False,
             verbose=1,
             workers=1,
-            use_multiprocessing=False#,
-            #callbacks=[self.hist]
+            use_multiprocessing=False,
+            callbacks=[self.hist]
             #validation_data=None,
             #validation_steps=None,
             #validation_freq=1,
@@ -368,7 +382,7 @@ if (__name__ == "__main__"):
     nn = nn_xy_s2waveforms()
     nn.train()
     #nn.validate_model()
-    #nn.save()
+    nn.save()
     
     t2 = time.time()
     dt = (t2 - t1)/60
