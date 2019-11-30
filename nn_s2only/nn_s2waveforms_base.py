@@ -42,7 +42,7 @@ class nn_waveforms():
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
         
-        strArrPred = np.zeros(
+        self.strArrPred = np.zeros(
             self.n_events_test,
             dtype=[
                 ('x_true', np.float32),
@@ -69,12 +69,12 @@ class nn_waveforms():
             xy      = x[1]
             xy_pred = self.model.predict(x_in)
             
-            strArrPred[i0:i1]['x_true'] = xy[:, 0]
-            strArrPred[i0:i1]['y_true'] = xy[:, 1]
-            strArrPred[i0:i1]['x_pred'] = xy_pred[:, 0]
-            strArrPred[i0:i1]['y_pred'] = xy_pred[:, 1]
-            strArrPred[i0:i1]['x_reco'] = xy[:, 2]
-            strArrPred[i0:i1]['y_reco'] = xy[:, 3]
+            self.strArrPred[i0:i1]['x_true'] = xy[:, 0]
+            self.strArrPred[i0:i1]['y_true'] = xy[:, 1]
+            self.strArrPred[i0:i1]['x_pred'] = xy_pred[:, 0]
+            self.strArrPred[i0:i1]['y_pred'] = xy_pred[:, 1]
+            self.strArrPred[i0:i1]['x_reco'] = xy[:, 2]
+            self.strArrPred[i0:i1]['y_reco'] = xy[:, 3]
             
             ibatch += 1
             
@@ -83,7 +83,6 @@ class nn_waveforms():
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
 
-        np.save('predictions', strArrPred)
         
         print("Batches: {0}".format(ibatch))
     
@@ -205,10 +204,10 @@ class nn_waveforms():
         print("Saving '{0}'...".format(f_pred))
         print()
         
-        self.model.save(f_model)                                  # Model
-        np.save(f_pred.replace('.npy', ''), self.arr2d_pred)      # Predictions
+        self.model.save(f_model)
+        np.save(f_pred.replace('.npy', ''), self.strArrPred)
+        arrHist = self.hist.save(f_hist)                     
         
-        arrHist = self.hist.save(f_hist)
         
         # What about multiple Epochs?
         #print()
