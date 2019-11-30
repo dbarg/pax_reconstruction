@@ -27,36 +27,65 @@ class nn_waveforms():
     #--------------------------------------------------------------------------
     #--------------------------------------------------------------------------
     
-    def validate(self, mygen):
-    
-        print()
+    def reco(self, mygen):
         
+        return
+    
+    
+    #--------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
+    
+    def validate(self, mygen):
+
+        print("\n\n----- Validate -----\n\n")
+    
+        #----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        
+        strArrPred = np.zeros(
+            self.n_events_test,
+            dtype=[
+                ('x_true', np.float32),
+                ('y_true', np.float32),
+                ('x_pred', np.float32),
+                ('y_pred', np.float32),
+                ('x_reco', np.float32),
+                ('y_reco', np.float32)
+            ]
+        )
+            
+        
+        #----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+
         ibatch = 0
         
         for x in mygen:
             
-            x0 = x[0]
-            x1 = x[1]
+            i0 = ibatch
+            i1 = i0 + self.events_per_batch
             
-            # model prediction
-            x2 = self.model.predict(x0)
+            x_in    = x[0]
+            xy      = x[1]
+            xy_pred = self.model.predict(x_in)
             
-            err = x1 - x2
-            err_xmean = np.mean(err[:,0])
-            err_ymean = np.mean(err[:,1])
-                            
-            print("mean x error: {0:.2f}".format(err_xmean))
-            print("mean x error: {0:.2f}".format(err_ymean))
+            strArrPred[i0:i1]['x_true'] = xy[:, 0]
+            strArrPred[i0:i1]['y_true'] = xy[:, 1]
+            strArrPred[i0:i1]['x_pred'] = xy_pred[:, 0]
+            strArrPred[i0:i1]['y_pred'] = xy_pred[:, 1]
+            strArrPred[i0:i1]['x_reco'] = xy[:, 2]
+            strArrPred[i0:i1]['y_reco'] = xy[:, 3]
             
             ibatch += 1
             
             continue
-       
-    
-        print("Batches: {0}".format(ibatch))
         
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
+
+        np.save('predictions', strArrPred)
+        
+        print("Batches: {0}".format(ibatch))
     
         return
     
@@ -70,29 +99,29 @@ class nn_waveforms():
 
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
-
-        test_frac = 0.10
         
         self.events_per_file  = 1000
         self.args             = parse_arguments()
-        self.events_per_batch = self.args.events_per_batch 
-        self.downsample       = self.args.downsample
-        self.downsample       = 100
-        
-        self.input_dim        = int(127000 / self.downsample)
         dir_data              = self.args.directory
         self.max_dirs         = self.args.max_dirs
+        
+        self.events_per_batch = self.args.events_per_batch 
+        self.downsample       = self.args.downsample
+        self.input_dim        = int(127000 / self.downsample)
         
         self.lst_dir_files    = glob.glob(dir_data + "/strArr*.npz")
         self.lst_dir_files.sort()
         self.lst_dir_files.sort(key=len)
         self.lst_dir_files    = self.lst_dir_files[:self.max_dirs]
         n_dir                 = len(self.lst_dir_files)
+        test_frac             = 0.10
         n_test                = max(int(n_dir*test_frac), 1)
         n_train               = n_dir - n_test
         self.lst_files_train  = self.lst_dir_files[0:n_train]
         self.lst_files_test   = self.lst_dir_files[n_train:]
         self.n_events_train   = n_train*self.events_per_file
+        self.n_events_test    = n_test*self.events_per_file
+        
         self.n_epochs_train   = int( (self.events_per_file) / (self.events_per_batch) )*n_train
         self.arr2d_pred       = np.zeros(shape=(self.events_per_file*n_test, 6))
 
@@ -123,7 +152,7 @@ class nn_waveforms():
         assert(n_train + n_test == n_dir)
         assert(os.path.exists(dir_data))
         assert(1000 % self.downsample == 0)
-        
+        assert(self.input_dim % 127 == 0)
         
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
@@ -137,7 +166,7 @@ class nn_waveforms():
     def run(self):
         
         self.train()
-        #self.save()
+        self.save()
 
         return
     
@@ -147,6 +176,7 @@ class nn_waveforms():
     #--------------------------------------------------------------------------
     
     def train(self):
+        print("Virtual")
         return
 
     
@@ -169,8 +199,10 @@ class nn_waveforms():
         f_pred      = 'nn_pred_acc{0:.0f}_evts{1:05d}_{2}.npy'.format(acc, self.n_events_train, layers_desc)
         f_hist      = 'nn_hist_acc{0:.0f}_evts{1:05d}_{2}.npy'.format(acc, self.n_events_train, layers_desc)
 
+        print()
         print("Saving '{0}'...".format(f_model))
         print("Saving '{0}'...".format(f_pred))
+        print()
         
         self.model.save(f_model)                                  # Model
         np.save(f_pred.replace('.npy', ''), self.arr2d_pred)      # Predictions
@@ -209,7 +241,6 @@ def parse_arguments():
     parser.add_argument('-directory'       , required=True)
     parser.add_argument('-max_dirs'        , required=True, type=int)
     parser.add_argument('-events_per_batch', required=True, type=int)
-    parser.add_argument('-samples'         , required=True, type=int)
     parser.add_argument('-downsample'      , required=True, type=int)
     
     arguments = parser.parse_args()
