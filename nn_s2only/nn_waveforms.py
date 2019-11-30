@@ -11,8 +11,6 @@ import pickle
 import psutil
 import time
 
-import ipca_helpers
-
 import keras
 import utils_keras as kutils
 
@@ -21,12 +19,48 @@ from dataGenerator_waveforms import *
 proc = psutil.Process(os.getpid())
 
 
-
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 
 class nn_waveforms():
-
+    
+    #--------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
+    
+    def validate(self, mygen):
+    
+        print()
+        
+        ibatch = 0
+        
+        for x in mygen:
+            
+            x0 = x[0]
+            x1 = x[1]
+            
+            # model prediction
+            x2 = self.model.predict(x0)
+            
+            err = x1 - x2
+            err_xmean = np.mean(err[:,0])
+            err_ymean = np.mean(err[:,1])
+                            
+            print("mean x error: {0:.2f}".format(err_xmean))
+            print("mean x error: {0:.2f}".format(err_ymean))
+            
+            ibatch += 1
+            
+            continue
+       
+    
+        print("Batches: {0}".format(ibatch))
+        
+        #----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+    
+        return
+    
+    
     #--------------------------------------------------------------------------
     #--------------------------------------------------------------------------
     
@@ -43,6 +77,8 @@ class nn_waveforms():
         self.args             = parse_arguments()
         self.events_per_batch = self.args.events_per_batch 
         self.downsample       = self.args.downsample
+        self.downsample       = 100
+        
         self.input_dim        = int(127000 / self.downsample)
         dir_data              = self.args.directory
         self.max_dirs         = self.args.max_dirs
@@ -101,7 +137,7 @@ class nn_waveforms():
     def run(self):
         
         self.train()
-        self.save()
+        #self.save()
 
         return
     

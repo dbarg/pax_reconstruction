@@ -7,13 +7,12 @@ import numpy as np
 import keras
 import os
 
-import ipca_helpers
-
 from utils_python import *
 
-proc = psutil.Process(os.getpid())
-
 import utils_keras as kutils
+import utils_kernel as kernutils
+
+proc = psutil.Process(os.getpid())
 
 
 #******************************************************************************
@@ -21,6 +20,12 @@ import utils_keras as kutils
 
 class DataGenerator_xy(keras.utils.Sequence):
 
+    #--------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
+    
+    def on_train_begin(self, logs=None):
+        print("HERE")
+        
     #--------------------------------------------------------------------------
     #--------------------------------------------------------------------------
     
@@ -98,7 +103,7 @@ class DataGenerator_xy(keras.utils.Sequence):
             sArr = data['arr_0']
             
         arr3d             = sArr[:][:]['image']
-        arr3d_ds          = ipca_helpers.downsample_arr3d(arr3d, self.downsample)
+        arr3d_ds          = kernutils.downsample_arr3d(arr3d, self.downsample)
         arr3d_batch       = arr3d_ds[i0:i1][:] 
         arr2d_batch       = arr3d_batch.reshape(arr3d_batch.shape[0], arr3d_batch.shape[1]*arr3d_batch.shape[2])
         arr2d_xy          = np.zeros(shape=(arr2d_batch.shape[0], 2))
@@ -127,15 +132,17 @@ class DataGenerator_xy(keras.utils.Sequence):
         return arr2d_batch, arr2d_xy
         return self.arr2d_waveforms, self.arr2d_xy
         
-    
+
     #--------------------------------------------------------------------------
     #--------------------------------------------------------------------------
     
     def on_epoch_end(self):
 
-        time.sleep(3) # Sometimes tensorflow print output lags
+        time.sleep(5) # Sometimes tensorflow print output lags
         
-        print(__name__ + "." + inspect.currentframe().f_code.co_name + "()")
+        print(__name__ + "." + inspect.currentframe().f_code.co_name + "()\n")
+        print()
+        
         print()
         
         return
@@ -149,83 +156,34 @@ class DataGenerator_xy(keras.utils.Sequence):
         #print(__name__ + "." + inspect.currentframe().f_code.co_name + "()")
         return self.n_batches # Batches per dataset/epoch
         
-
-    #------------------------------------------------------------------------------
-    #------------------------------------------------------------------------------
     
-#    def validate_model(self):
-#        
-#        print("\n--- Test ---")
-#        
-#        #------------------------------------------------------------------------------
-#        #------------------------------------------------------------------------------
-#    
-#        for iFile, fpath in enumerate(self.lst_files_test):
-#    
-#            #----------------------------------------------------------------------
-#            #----------------------------------------------------------------------
-#
-#            print("\n   Loading data file: {0} ...".format(fpath))
-#
-#            sArr     = np.load(fpath)
-#            sArr     = sArr[0:self.maxRows][:][:]
-#            arr3d    = sArr[:][:]['image']
-#            arr3d_ds = ipca_helpers.downsample_arr3d(arr3d, self.downsample)
-#            j0       = iFile*self.maxRows
-#            j1       = j0 + self.maxRows - 1
-#
-#
-#            #----------------------------------------------------------------------
-#            #----------------------------------------------------------------------
-#
-#            for ibatch in range(0, self.n_batches):
-#
-#                i0  = int(ibatch*self.events_per_batch)
-#                i1  = int(i0 + self.events_per_batch)
-# 
-#                arr3d_batch       = arr3d_ds[i0:i1][:] 
-#                arr2d_batch       = arr3d_batch.reshape(arr3d_batch.shape[0], arr3d_batch.shape[1]*arr3d_batch.shape[2])
-#                
-#                arr2d_xy          = np.zeros(shape=(arr2d_batch.shape[0], 2))
-#                arr2d_xy_s2       = np.zeros(shape=(arr2d_batch.shape[0], 2))
-#                arr2d_xy[:, 0]    = sArr[i0:i1][:]['x_true']
-#                arr2d_xy[:, 1]    = sArr[i0:i1][:]['y_true']
-#                arr2d_xy_s2[:, 0] = sArr[i0:i1][:]['x_s2']
-#                arr2d_xy_s2[:, 1] = sArr[i0:i1][:]['y_s2']
-#                
-#                print("\n   Evaluating Input Data: Predict batch {0}/{1}   (events: {2}-{3})".format(
-#                    ibatch+1,
-#                    self.n_batches,
-#                    i0,
-#                    i1
-#                ))
-#                
-#                print("    -> Memory Usage: {0} GB".format(getMemoryGB(proc)))
-#                
-#                print("Predict...")
-#                
-#                arr2d_xy_pred = self.model.predict(arr2d_batch)
-#        
-#                self.arr2d_pred[i0:i1, 0] = arr2d_xy[:,0]
-#                self.arr2d_pred[i0:i1, 1] = arr2d_xy[:,1]
-#                self.arr2d_pred[i0:i1, 2] = arr2d_xy_s2[:,0]
-#                self.arr2d_pred[i0:i1, 3] = arr2d_xy_s2[:,1]
-#                self.arr2d_pred[i0:i1, 4] = arr2d_xy_pred[:,0]
-#                self.arr2d_pred[i0:i1, 5] = arr2d_xy_pred[:,1]
-#            
-#                #for i in range(0, 100):
-#                #    print()
-#                #    print("true (x,y) = ({0}, {1})".format(self.arr2d_pred[i, 0], self.arr2d_pred[i, 1]))
-#                #    print("reco (x,y) = ({0}, {1})".format(self.arr2d_pred[i, 2], self.arr2d_pred[i, 3]))
-#                #    print("pred (x,y) = ({0}, {1})".format(self.arr2d_pred[i, 4], self.arr2d_pred[i, 5]))
-#                      
-#                continue
-#            
-#
-#            #----------------------------------------------------------------------
-#            #----------------------------------------------------------------------
-#
-#            continue
-#    
-#        return
-#        
+    #--------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
+
+#   arr2d_xy          = np.zeros(shape=(arr2d_batch.shape[0], 2))
+#   arr2d_xy_s2       = np.zeros(shape=(arr2d_batch.shape[0], 2))
+#   arr2d_xy[:, 0]    = sArr[i0:i1][:]['x_true']
+#   arr2d_xy[:, 1]    = sArr[i0:i1][:]['y_true']
+#   arr2d_xy_s2[:, 0] = sArr[i0:i1][:]['x_s2']
+#   arr2d_xy_s2[:, 1] = sArr[i0:i1][:]['y_s2']
+#   
+#   print("\n   Evaluating Input Data: Predict batch {0}/{1}   (events: {2}-{3})".format(
+#       ibatch+1,
+#       self.n_batches,
+#       i0,
+#       i1
+#   ))
+#   
+#   print("    -> Memory Usage: {0} GB".format(getMemoryGB(proc)))
+#   
+#   print("Predict...")
+#   
+#   arr2d_xy_pred = self.model.predict(arr2d_batch)
+#  
+#   self.arr2d_pred[i0:i1, 0] = arr2d_xy[:,0]
+#   self.arr2d_pred[i0:i1, 1] = arr2d_xy[:,1]
+#   self.arr2d_pred[i0:i1, 2] = arr2d_xy_s2[:,0]
+#   self.arr2d_pred[i0:i1, 3] = arr2d_xy_s2[:,1]
+#   self.arr2d_pred[i0:i1, 4] = arr2d_xy_pred[:,0]
+#   self.arr2d_pred[i0:i1, 5] = arr2d_xy_pred[:,1]
+#  
