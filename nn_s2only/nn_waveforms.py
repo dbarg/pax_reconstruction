@@ -121,7 +121,8 @@ class nn_waveforms():
         self.lst_files_test   = self.lst_dir_files[n_train:]
         self.n_events_train   = n_train*self.events_per_file
         self.n_events_test    = n_test*self.events_per_file
-        
+        self.dir_out          = './models/'
+
         self.n_epochs_train   = int( (self.events_per_file) / (self.events_per_batch) )*n_train
         self.arr2d_pred       = np.zeros(shape=(self.events_per_file*n_test, 6))
 
@@ -195,9 +196,9 @@ class nn_waveforms():
         
         acc         = int(100*np.round(self.history.history['acc'], 2))
         layers_desc = kutils.getModelDescription(self.model)
-        f_model     = 'nn_modl_acc{0:.0f}_evts{1:05d}_{2}.h5'.format(acc, self.n_events_train, layers_desc)
-        f_pred      = 'nn_pred_acc{0:.0f}_evts{1:05d}_{2}.npy'.format(acc, self.n_events_train, layers_desc)
-        f_hist      = 'nn_hist_acc{0:.0f}_evts{1:05d}_{2}.npy'.format(acc, self.n_events_train, layers_desc)
+        f_model     = self.dir_out + 'nn_modl_acc{0:.0f}_evts{1:05d}_{2}.h5'.format(acc, self.n_events_train, layers_desc)
+        f_pred      = self.dir_out + 'nn_pred_acc{0:.0f}_evts{1:05d}_{2}.npy'.format(acc, self.n_events_train, layers_desc)
+        f_hist      = self.dir_out + 'nn_hist_acc{0:.0f}_evts{1:05d}_{2}.npy'.format(acc, self.n_events_train, layers_desc)
 
         print()
         print("Saving '{0}'...".format(f_model))
