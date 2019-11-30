@@ -17,10 +17,10 @@ class nn_xy_s2waveforms(nn_waveforms):
         datagen_test  = DataGenerator_xy(self.lst_files_test , downsample=self.downsample)
         
         self.model = kutils.dnn_regression(self.input_dim, 2, [127])
-        
+
         self.history = self.model.fit_generator(
             generator=datagen_train,
-            #validation_data=dataget_test,
+            validation_data=datagen_test,
             initial_epoch=0,
             epochs=1,
             #steps_per_epoch=self.n_epochs_train,
@@ -31,7 +31,7 @@ class nn_xy_s2waveforms(nn_waveforms):
             callbacks=[self.hist]
         )
         
-        
+            
         print(self.model.summary())
 
     pass

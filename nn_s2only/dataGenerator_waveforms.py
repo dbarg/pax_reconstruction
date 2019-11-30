@@ -106,7 +106,7 @@ class DataGenerator_xy(keras.utils.Sequence):
         arr2d_xy[:, 1]    = sArr[i0:i1][:]['true_y']
         arr_s2areas_batch = sArr[i0:i1][:]['s2_areas']
 
-        print("Batch: {0}/{1}, iFile {2}, i0={3:03d}, i1={4}, j0={5:03d}, j1={6}, Memory: {7}, File: {8}".format(
+        print("Batch: {0}/{1}, iFile {2}, i0={3:03d}, i1={4}, j0={5:03d}, j1={6}, Memory: {7} GB, File: {8}".format(
             self.batch,
             self.n_batches,
             iFile,
@@ -132,8 +132,11 @@ class DataGenerator_xy(keras.utils.Sequence):
     #--------------------------------------------------------------------------
     
     def on_epoch_end(self):
+
+        time.sleep(3) # Sometimes tensorflow print output lags
         
         print(__name__ + "." + inspect.currentframe().f_code.co_name + "()")
+        print()
         
         return
     
@@ -142,7 +145,7 @@ class DataGenerator_xy(keras.utils.Sequence):
     #--------------------------------------------------------------------------
     
     def __len__(self):
-        #return 4
+        return 2
         #print(__name__ + "." + inspect.currentframe().f_code.co_name + "()")
         return self.n_batches # Batches per dataset/epoch
         

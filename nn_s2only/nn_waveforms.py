@@ -60,9 +60,9 @@ class nn_waveforms():
         self.n_epochs_train   = int( (self.events_per_file) / (self.events_per_batch) )*n_train
         self.arr2d_pred       = np.zeros(shape=(self.events_per_file*n_test, 6))
 
+        self.model = None
         self.hist  = kutils.logHistory()
-
-        self.t0 = time.time()
+        self.t0    = time.time()
 
         
         #------------------------------------------------------------------------------
@@ -136,11 +136,10 @@ class nn_waveforms():
         print("Saving '{0}'...".format(f_model))
         print("Saving '{0}'...".format(f_pred))
         
-        self.hist.save(f_model)                                  # Model
+        self.model.save(f_model)                                  # Model
         np.save(f_pred.replace('.npy', ''), self.arr2d_pred)      # Predictions
         
-        self.hist.save(f_hist)
-        #np.save(f_hist.replace('.npy', ''), self.hist)
+        arrHist = self.hist.save(f_hist)
         
         # What about multiple Epochs?
         #print()
@@ -149,8 +148,8 @@ class nn_waveforms():
         #print("Epochs:           {0}".format(self.n_epochs_train))
         #print("Events:           {0}".format(self.n_events_train))
 
-        assert(self.hist.batches == arrHist.shape[0])
-        assert(self.hist.batches*self.events_per_batch == self.n_events_train)
+        #assert(self.hist.batches == arrHist.shape[0])
+        #assert(self.hist.batches*self.events_per_batch == self.n_events_train)
         
         self.t1 = time.time()
         dt = (self.t1 - self.t0)/60
