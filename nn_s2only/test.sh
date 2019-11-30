@@ -12,8 +12,7 @@
 #SBATCH --output=log.txt
 #SBATCH --error=log.txt
 
-cd ${HOME}/dali/pax_reconstruction/nn_s2only
+cd /dali/lgrandi/dbarge/pax_reconstruction/nn_s2only
 source ~/.bash/.setup_pax_head.sh
 
-echo "HERE"
-#python ./nn_s2_train.py -directory ../../xe1t-processing/pax_merge/temp_s2/ -max_dirs 2 -events_per_batch 100 -samples 1000 -downsample 10
+#python ./nn_s2_train.py -directory ../../xe1t-processing/pax_merge/temp_s2/ -max_dirs 2 -events_per_batch 100 -samples 1000 -downsample 2

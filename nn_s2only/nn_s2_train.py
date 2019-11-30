@@ -16,6 +16,8 @@ import ipca_helpers
 import keras
 import utils_keras as kutils
 
+from dataGenerator import *
+
 proc = psutil.Process(os.getpid())
 
 
@@ -42,6 +44,8 @@ class nn_xy_s2waveforms():
         #------------------------------------------------------------------------------
         #------------------------------------------------------------------------------
 
+        test_frac = 0.10
+        
         self.maxRows          = 1000
         self.args             = parse_arguments()
         self.events_per_batch = self.args.events_per_batch 
@@ -49,27 +53,21 @@ class nn_xy_s2waveforms():
         dir_data              = self.args.directory
         self.n_batches        = int(self.maxRows/self.events_per_batch)
         self.input_dim        = int(127000/self.downsample)
-
-        assert(os.path.exists(dir_data))
-
-        self.max_dirs         = min(self.args.max_dirs, 9)
+        self.max_dirs         = self.args.max_dirs
+        
         self.lst_dir_files    = glob.glob(dir_data + "/strArr*.npz")
         self.lst_dir_files.sort()
         self.lst_dir_files.sort(key=len)
-        self.lst_files_train  = self.lst_dir_files[0:self.max_dirs]
-        self.lst_files_test   = self.lst_dir_files[self.max_dirs+1:self.max_dirs+2]
-        
+        self.lst_dir_files    = self.lst_dir_files[:self.max_dirs]
         n_dir                 = len(self.lst_dir_files)
-        n_files_test          = len(self.lst_files_test)
-        n_files_train         = len(self.lst_files_train)
-        self.n_events_train   = n_files_train*self.maxRows
-        
-        self.n_epochs_train   = int( (self.maxRows) / (self.events_per_batch) )*n_files_train
-        self.arr2d_pred       = np.zeros(shape=(self.maxRows*n_files_test, 6))
+        n_test                = max(int(n_dir*test_frac), 1)
+        n_train               = n_dir - n_test
+        self.lst_files_train  = self.lst_dir_files[0:n_train]
+        self.lst_files_test   = self.lst_dir_files[n_train:]
+        self.n_events_train   = n_train*self.maxRows
+        self.n_epochs_train   = int( (self.maxRows) / (self.events_per_batch) )*n_train
+        self.arr2d_pred       = np.zeros(shape=(self.maxRows*n_test, 6))
 
-        assert(1000 % self.downsample == 0)
-        assert(self.input_dim % 127 == 0)
-        
         
         #------------------------------------------------------------------------------
         #------------------------------------------------------------------------------
@@ -80,14 +78,25 @@ class nn_xy_s2waveforms():
         print("Batches:          {0}".format(self.n_batches))
         print("Events per batch: {0}".format(self.events_per_batch))
         print("Events:           {0}".format(self.n_events_train))
+        print("Files Train:      {0}".format(n_train))
+        print("Files Test:       {0}".format(n_test))
         
-        print("Train files: \n")
+        print("\nTrain files:")
         for x in (self.lst_files_train):
             print("   " + x)
             
-        print("Test files: \n")
+        print("\nTest files:")
         for x in (self.lst_files_test):
             print("   " + x)
+        
+        
+        assert(n_train > 0)
+        assert(n_test > 0)
+        assert(n_train + n_test == n_dir)
+        assert(os.path.exists(dir_data))
+        assert(1000 % self.downsample == 0)
+        assert(self.input_dim % 127 == 0)
+        
         
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
@@ -104,82 +113,61 @@ class nn_xy_s2waveforms():
         
         print("generator_waveform_xy")
         
-        while(True):
-            
-            print("while")
-            
-            #------------------------------------------------------------------------------
-            #------------------------------------------------------------------------------
+        #------------------------------------------------------------------------------
+        #------------------------------------------------------------------------------
     
-            for iFile, fpath in enumerate(self.lst_files_train):
+        for iFile, fpath in enumerate(self.lst_files_train):
         
-                #----------------------------------------------------------------------
-                #----------------------------------------------------------------------
+            #----------------------------------------------------------------------
+            #----------------------------------------------------------------------
 
-                print("\n   Loading data file: {0} ...".format(fpath))
+            print("\n   Loading data file: {0} ...".format(fpath))
 
-                sArr        = np.load(fpath)['arr_0']
-                sArr        = sArr[0:self.maxRows][:][:]
-                arr3d       = sArr[:][:]['image']
-                arr3d_ds    = ipca_helpers.downsample_arr3d(arr3d, self.downsample)
-                
-                
-                #----------------------------------------------------------------------
-                #----------------------------------------------------------------------
-
-                for ibatch in range(0, self.n_batches):
-
-                    i0 = int(ibatch*self.events_per_batch)
-                    i1 = int(i0 + self.events_per_batch)
-                    
-                    arr3d_batch       = arr3d_ds[i0:i1][:] 
-                    arr2d_batch       = arr3d_batch.reshape(arr3d_batch.shape[0], arr3d_batch.shape[1]*arr3d_batch.shape[2])
-                    arr2d_xy          = np.zeros(shape=(arr2d_batch.shape[0], 2))
-                    arr2d_xy[:, 0]    = sArr[i0:i1][:]['true_x']
-                    arr2d_xy[:, 1]    = sArr[i0:i1][:]['true_y']
-                    arr_s2areas_batch = sArr[i0:i1][:]['s2_areas']
-        
-                    j0 = i0 + iFile*self.maxRows
-                    j1 = j0 + self.events_per_batch
-
-                
-                    tst = np.sum(arr3d_batch, axis=2)
-                    sum_s2areas = np.sum(arr_s2areas_batch[0,:])
-                    sum_tst = np.sum(tst[0,:])
-                    
-                    #print()
-                    #print(sum_s2areas)
-                    #print(sum_tst)
-                    #print()
-                    #assert(False)
-                    
-                    #print(arr2d_xy[0, 0])
-                    #print(arr2d_xy[0, 1])
-                    #print(sArr[i0:i1][:]['x_s2'])
+            sArr     = np.load(fpath)['arr_0']
+            sArr     = sArr[0:self.maxRows][:][:]
+            arr3d    = sArr[:][:]['image']
+            arr3d_ds = ipca_helpers.downsample_arr3d(arr3d, self.downsample)
             
-                    if (False):
-                        print("   NN Fitting batch {0}/{1}".format(ibatch+1, self.n_batches))
-                        print("      Events: {0}-{1}".format(j0, j1))
-                        print("      Index:  {0}-{1}".format(i0, i1))
-                        print("      Memory: {0} GB".format(getMemoryGB(proc)))
-                    
-                    yield(
-                        {'dense_1_input': arr2d_batch},
-                        #{'dense_1_input': arr_s2areas},
-                        {'dense_3'      : arr2d_xy}
-                    )
+            
+            #----------------------------------------------------------------------
+            #----------------------------------------------------------------------
+
+            for ibatch in range(0, self.n_batches):
+
+                i0 = int(ibatch*self.events_per_batch)
+                i1 = int(i0 + self.events_per_batch)
+                
+                arr3d_batch       = arr3d_ds[i0:i1][:] 
+                arr2d_batch       = arr3d_batch.reshape(arr3d_batch.shape[0], arr3d_batch.shape[1]*arr3d_batch.shape[2])
+                arr2d_xy          = np.zeros(shape=(arr2d_batch.shape[0], 2))
+                arr2d_xy[:, 0]    = sArr[i0:i1][:]['true_x']
+                arr2d_xy[:, 1]    = sArr[i0:i1][:]['true_y']
+                arr_s2areas_batch = sArr[i0:i1][:]['s2_areas']
+        
+                j0 = i0 + iFile*self.maxRows
+                j1 = j0 + self.events_per_batch
+
+                if (False):
+                    print("   NN Fitting batch {0}/{1}".format(ibatch+1, self.n_batches))
+                    print("      Events: {0}-{1}".format(j0, j1))
+                    print("      Index:  {0}-{1}".format(i0, i1))
+                    print("      Memory: {0} GB".format(getMemoryGB(proc)))
+                
+                yield(
+                    {'dense_1_input': arr2d_batch},
+                    {'dense_3'      : arr2d_xy}
+                )
 
 
-                #----------------------------------------------------------------------
-                #----------------------------------------------------------------------
+            #----------------------------------------------------------------------
+            #----------------------------------------------------------------------
 
-                continue
-    
             continue
-        
+    
         return
         
 
+  
     #------------------------------------------------------------------------------
     #------------------------------------------------------------------------------
     
@@ -258,7 +246,7 @@ class nn_xy_s2waveforms():
 #            continue
 #    
 #        return
-        
+#        
 
     #--------------------------------------------------------------------------
     #--------------------------------------------------------------------------
@@ -266,7 +254,6 @@ class nn_xy_s2waveforms():
     def init_model(self):
 
         self.model = kutils.dnn_regression(self.input_dim, 2, [127])
-        #self.model = kutils.dnn_regression(127, 2, [127])
         self.hist  = kutils.logHistory()
         
         return
@@ -279,18 +266,35 @@ class nn_xy_s2waveforms():
         
         print("\n--- Train ---")
         
+        datagen_train = DataGenerator_xy(self.lst_files_train)
+        
+        #return
+        self.history  = self.model.fit_generator(
+            generator=datagen_train,
+            #epochs=1,
+            verbose=1,
+            shuffle=False
+        )
+        
+        
+        return
+        
+        
+        
+        
         self.history = self.model.fit_generator(
-            self.generator_waveform_xy(0),
+            #generator=self.generator_waveform_xy(0),
+            generator=datagen_train,
             initial_epoch=0,
             steps_per_epoch=self.n_epochs_train,
             epochs=1,
             shuffle=False,
             verbose=1,
             workers=1,
-            use_multiprocessing=False,
-            callbacks=[self.hist]
-            #validation_data=None,
-            #validation_steps=None,
+            use_multiprocessing=False#,
+            #callbacks=[self.hist],
+            #validation_data=self.generator_waveform_xy_test(0),
+            #validation_steps=1
             #validation_freq=1,
             #class_weight=None,
             #max_queue_size=10,
@@ -307,6 +311,10 @@ class nn_xy_s2waveforms():
     
     def save(self):
     
+        if (not self.history):
+            print("No History")
+            return
+         
         #----------------------------------------------------------------------
         # To Do, Add:
         #   dropout rate, learning rate
@@ -327,9 +335,10 @@ class nn_xy_s2waveforms():
         print("Saving '{0}'...".format(f_model))
         print("Saving '{0}'...".format(f_pred))
               
-        self.model.save(f_model)                                # Model
-        np.save(f_pred.replace('.npy', ''), self.arr2d_pred)                        # Predictions
-        arrHist      = np.zeros(shape=(len(self.hist.accs), 3)) # History
+        
+        self.model.save(f_model)                                  # Model
+        np.save(f_pred.replace('.npy', ''), self.arr2d_pred)      # Predictions
+        arrHist      = np.zeros(shape=(len(self.hist.losses), 3)) # History
         arrHist[:,0] = np.array(self.hist.losses)
         arrHist[:,1] = np.array(self.hist.accs)
         arrHist[:,2] = np.array(self.hist.times)
@@ -378,11 +387,12 @@ if (__name__ == "__main__"):
     print("\nStarting...\n")
     
     t1 = time.time()
-    
+
+
     nn = nn_xy_s2waveforms()
     nn.train()
-    #nn.validate_model()
-    nn.save()
+    ##nn.validate_model()
+    #nn.save()
     
     t2 = time.time()
     dt = (t2 - t1)/60
