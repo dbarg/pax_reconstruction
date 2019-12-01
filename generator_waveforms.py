@@ -7,13 +7,12 @@ import numpy as np
 import keras
 import os
 
-from utils_python import *
-
 import utils_keras as kutils
 import utils_kernel as kernutils
 
-proc = psutil.Process(os.getpid())
+from utils_python import *
 
+proc = psutil.Process(os.getpid())
 
     
 #******************************************************************************
@@ -32,13 +31,16 @@ class DataGenerator(keras.utils.Sequence):
         n_inputs=127,
         n_outputs=2,
         downsample=10,
+        shuffle=False,
         verbose=True
     ):
+        np.random.seed(13)
         
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
 
         self.lst_files        = lst_files
+        self.shuffle          = shuffle
         self.n_files          = len(self.lst_files)
         self.events_per_file  = events_per_file
         self.events_per_batch = events_per_batch
@@ -48,7 +50,9 @@ class DataGenerator(keras.utils.Sequence):
         self.n_outputs        = n_outputs
         self.batch            = 0
         self.downsample       = downsample
-
+        self.file_indexes     = np.arange(0, self.events_per_file, 1)
+        
+        
         assert(self.events_per_batch < self.events_per_file)
         
         
@@ -66,6 +70,8 @@ class DataGenerator(keras.utils.Sequence):
             for x in (self.lst_files):
                 print("   " + x)
         
+        self.on_epoch_end()
+        
         
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
@@ -78,47 +84,47 @@ class DataGenerator(keras.utils.Sequence):
     
     def __getitem__(self, index):
 
-        self.batch = index
-        
         #------------------------------------------------------------------------------
         #------------------------------------------------------------------------------
 
         sArr  = None
-        iFile = int(self.batch*self.events_per_batch / self.events_per_file)
+        iFile = int(index*self.events_per_batch / self.events_per_file)
         fpath = self.lst_files[iFile]
-        i0    = int((self.batch*self.events_per_batch)%self.events_per_file)
+        i0    = int((index*self.events_per_batch)%self.events_per_file)
         i1    = int(i0 + self.events_per_batch)
         j0    = i0 + iFile*self.events_per_file
         j1    = j0 + self.events_per_batch
         
         with np.load(fpath) as data:
             sArr = data['arr_0']
-            sArr = sArr[i0:i1][:][:]
-            
+                 
+        batch_indices = self.file_indexes [i0:i1] # shuffled at epoch end
+        #print("\n   batch indices: {0}\n".format(batch_indices))
+        
+        #sArr = sArr[i0:i1][:][:]
+        sArr          = sArr[batch_indices][:][:]
         arr3d         = sArr[:][:]['image']
         arr3d_ds      = kernutils.downsample_arr3d(arr3d, self.downsample)
         arr3d_batch   = arr3d_ds[:][:] 
         arr2d_batch   = arr3d_batch.reshape(arr3d_batch.shape[0], arr3d_batch.shape[1]*arr3d_batch.shape[2])
-        
-        #arr2d_xy      = np.zeros(shape=(arr2d_batch.shape[0], 2))
-        #arr2d_xy[:,0] = sArr[:]['true_x']
-        #arr2d_xy[:,1] = sArr[:]['true_y']
 
-        #print("Index: {0}".format(index))
-        print("-> Data Generator Batch: {0}/{1}, iFile {2}, i0={3:03d}, i1={4}, j0={5:03d}, j1={6}, Memory: {7} GB, File: {8}".format(
-            self.batch,
+
+
+        #------------------------------------------------------------------------------
+        #------------------------------------------------------------------------------
+        
+        print("   (Data Generator) Batch: {0}/{1}, File {2}: {3}, Memory: {4} GB".format(
+            index,
             self.n_batches,
             iFile,
-            i0,
-            i1,
-            j0,
-            j1,
-            getMemoryGB(proc),
-            os.path.basename(fpath)
+            os.path.basename(fpath),
+            getMemoryGB(proc)
         ))
 
-        self.batch += 1
-        
+        if (not self.shuffle):
+            print("   i0={3:03d}, i1={4}, j0={5:03d}, j1={6}".format(i0, i1, j0, j1))
+
+
         #------------------------------------------------------------------------------
         #------------------------------------------------------------------------------
         
@@ -134,6 +140,10 @@ class DataGenerator(keras.utils.Sequence):
         print(__name__ + "." + inspect.currentframe().f_code.co_name + "()\n")
         print()
         
+        if (self.shuffle):
+            print("Shuffling...")
+            np.random.shuffle(self.file_indexes)
+            
         return
     
 

@@ -137,6 +137,7 @@ class nn_waveforms():
         
         print("Input Directory:  {0}".format(dir_data))
         print("Events:           {0}".format(self.n_events_train))
+        print("Files:            {0}".format(n_dir))
         print("Files Train:      {0}".format(n_train))
         print("Files Test:       {0}".format(n_test))
         print("Train files:")
