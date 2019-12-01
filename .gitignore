@@ -6,7 +6,6 @@
 *.npy
 *.json
 *.txt
-*.sh
 *.npy
 *.npz
 
