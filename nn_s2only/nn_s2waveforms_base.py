@@ -14,7 +14,7 @@ import time
 import keras
 import utils_keras as kutils
 
-from dataGenerator_waveforms import *
+from generator_waveforms import *
 
 proc = psutil.Process(os.getpid())
 
