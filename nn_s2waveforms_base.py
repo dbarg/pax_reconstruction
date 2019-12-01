@@ -62,12 +62,14 @@ class nn_waveforms():
         
         for x in mygen:
             
-            i0 = ibatch
+            i0 = ibatch*self.events_per_batch
             i1 = i0 + self.events_per_batch
             
             x_in    = x[0]
             xy      = x[1]
             xy_pred = self.model.predict(x_in)
+            
+            print(i0)
             
             self.strArrPred[i0:i1]['x_true'] = xy[:, 0]
             self.strArrPred[i0:i1]['y_true'] = xy[:, 1]
@@ -147,6 +149,7 @@ class nn_waveforms():
         for x in (self.lst_files_test):
             print("   " + x)
         
+        print(n_train)
         assert(n_train > 0)
         assert(n_test > 0)
         assert(n_train + n_test == n_dir)
@@ -202,6 +205,7 @@ class nn_waveforms():
         print()
         print("Saving '{0}'...".format(f_model))
         print("Saving '{0}'...".format(f_pred))
+        print("Saving '{0}'...".format(f_hist))
         print()
         
         self.model.save(f_model)
