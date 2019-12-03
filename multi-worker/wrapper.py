@@ -30,11 +30,7 @@ def wrapper():
     print("go")
     
     ps, lst_wrkrs = get_resources()
-    print(type(lst_wrkrs))
-    print(lst_wrkrs)
     str_wrkrs     = ','.join(lst_wrkrs)
-    print(type(str_wrkrs))
-    print(str_wrkrs)
     
     print("HERE: {0}".format(str_wrkrs))
     
