@@ -41,22 +41,6 @@ class nn_waveforms():
     
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
-        
-        self.strArrPred = np.zeros(
-            self.n_events_test,
-            dtype=[
-                ('x_true', np.float32),
-                ('y_true', np.float32),
-                ('x_pred', np.float32),
-                ('y_pred', np.float32),
-                ('x_reco', np.float32),
-                ('y_reco', np.float32)
-            ]
-        )
-            
-        
-        #----------------------------------------------------------------------
-        #----------------------------------------------------------------------
 
         ibatch = 0
         
@@ -68,8 +52,6 @@ class nn_waveforms():
             x_in    = x[0]
             xy      = x[1]
             xy_pred = self.model.predict(x_in)
-            
-            print(i0)
             
             self.strArrPred[i0:i1]['x_true'] = xy[:, 0]
             self.strArrPred[i0:i1]['y_true'] = xy[:, 1]
@@ -116,8 +98,14 @@ class nn_waveforms():
         self.lst_dir_files    = self.lst_dir_files[:self.max_dirs]
         n_dir                 = len(self.lst_dir_files)
         test_frac             = 0.10
-        n_test                = max(int(n_dir*test_frac), 1)
+        
+        n_test                = int(n_dir*test_frac)
         n_train               = n_dir - n_test
+        
+        if (n_test < 1 and n_train > 1):
+            n_train -= 1
+            n_test  += 1
+            
         self.lst_files_train  = self.lst_dir_files[0:n_train]
         self.lst_files_test   = self.lst_dir_files[n_train:]
         self.n_events_train   = n_train*self.events_per_file
@@ -131,6 +119,18 @@ class nn_waveforms():
         self.hist  = kutils.logHistory()
         self.t0    = time.time()
 
+        self.strArrPred = np.zeros(
+            self.n_events_test,
+            dtype=[
+                ('x_true', np.float32),
+                ('y_true', np.float32),
+                ('x_pred', np.float32),
+                ('y_pred', np.float32),
+                ('x_reco', np.float32),
+                ('y_reco', np.float32)
+            ]
+        )
+            
         
         #------------------------------------------------------------------------------
         #------------------------------------------------------------------------------
@@ -152,7 +152,7 @@ class nn_waveforms():
         
         print(n_train)
         assert(n_train > 0)
-        assert(n_test > 0)
+        #assert(n_test > 0)
         assert(n_train + n_test == n_dir)
         assert(os.path.exists(dir_data))
         assert(1000 % self.downsample == 0)
@@ -197,7 +197,9 @@ class nn_waveforms():
         # Save.   To Do, Add: dropout rate, learning rate
         #----------------------------------------------------------------------
         
-        acc         = int(100*np.round(self.history.history['acc'], 2))
+        accs        = self.history.history['acc']
+        acc         = accs[len(accs)-1]
+        acc         = int(100*np.round(acc, 2))
         layers_desc = kutils.getModelDescription(self.model)
         f_model     = self.dir_out + 'nn_modl_acc{0:.0f}_evts{1:05d}_{2}.h5'.format(acc, self.n_events_train, layers_desc)
         f_pred      = self.dir_out + 'nn_pred_acc{0:.0f}_evts{1:05d}_{2}.npy'.format(acc, self.n_events_train, layers_desc)

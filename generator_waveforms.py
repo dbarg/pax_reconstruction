@@ -53,7 +53,7 @@ class DataGenerator(keras.utils.Sequence):
         self.file_indexes     = np.arange(0, self.events_per_file, 1)
         
         
-        assert(self.events_per_batch < self.events_per_file)
+        assert(self.events_per_batch <= self.events_per_file)
         
         
         #----------------------------------------------------------------------
@@ -112,17 +112,20 @@ class DataGenerator(keras.utils.Sequence):
 
         #------------------------------------------------------------------------------
         #------------------------------------------------------------------------------
+
+        str_idxs = ""
         
-        print("   (Data Generator) Batch: {0}/{1}, File {2}: {3}, Memory: {4} GB".format(
+        if (not self.shuffle):
+            str_idxs = ", i0={0:04d}, i1={1:04d}, j0={2:05d}, j1={3:05d}".format(i0, i1, j0, j1)
+        
+        print("   (Data Generator) Batch: {0}/{1}, File {2}: {3}, Memory: {4} GB{5}".format(
             index,
             self.n_batches,
             iFile,
             os.path.basename(fpath),
-            getMemoryGB(proc)
+            getMemoryGB(proc),
+            str_idxs
         ))
-
-        if (not self.shuffle):
-            print("   i0={3:03d}, i1={4}, j0={5:03d}, j1={6}".format(i0, i1, j0, j1))
 
 
         #------------------------------------------------------------------------------
@@ -137,8 +140,8 @@ class DataGenerator(keras.utils.Sequence):
     def on_epoch_end(self):
 
         #time.sleep(5) # Sometimes tensorflow print output lags
-        print(__name__ + "." + inspect.currentframe().f_code.co_name + "()\n")
-        print()
+        #print(__name__ + "." + inspect.currentframe().f_code.co_name + "()\n")
+        #print()
         
         if (self.shuffle):
             print("Shuffling...")
@@ -159,19 +162,58 @@ class DataGenerator(keras.utils.Sequence):
 #******************************************************************************
 #******************************************************************************
 
+class DataGenerator_s2areas_xy(DataGenerator):
+    
+    def __getitem__(self, index):
+    
+        arr2d_batch, sArr = super(DataGenerator_s2areas_xy, self).__getitem__(index)
+
+        arr2d_xy       = np.zeros(shape=(arr2d_batch.shape[0], 2))
+        arr2d_xy[:,0]  = sArr[:]['true_x']
+        arr2d_xy[:,1]  = sArr[:]['true_y']
+        arr_s2areas    = sArr[:]['s2_areas']
+        
+        s2area_sums    = np.sum(arr_s2areas, axis=1)
+        s2area_sum_min = np.amin(s2area_sums)
+        
+        assert(s2area_sum_min > 0)
+        
+        return arr_s2areas, arr2d_xy
+
+    
+#******************************************************************************
+#******************************************************************************
+
+class DataGenerator_s2areas_xy2(DataGenerator):
+    
+    def __getitem__(self, index):
+    
+        arr2d_batch, sArr =  super(DataGenerator_s2areas_xy2, self).__getitem__(index)
+
+        arr_s2areas   = sArr[:]['s2_areas']
+        arr2d_xy      = np.zeros(shape=(arr2d_batch.shape[0], 4))
+        arr2d_xy[:,0] = sArr[:]['true_x']
+        arr2d_xy[:,1] = sArr[:]['true_y']
+        arr2d_xy[:,2] = sArr[:]['x']
+        arr2d_xy[:,3] = sArr[:]['y']
+        
+        return arr_s2areas, arr2d_xy
+
+    
+#******************************************************************************
+#******************************************************************************
+
 class DataGenerator_xy(DataGenerator):
     
     def __getitem__(self, index):
     
         arr2d_batch, sArr =  super(DataGenerator_xy, self).__getitem__(index)
-
+        
         arr2d_xy      = np.zeros(shape=(arr2d_batch.shape[0], 2))
         arr2d_xy[:,0] = sArr[:]['true_x']
         arr2d_xy[:,1] = sArr[:]['true_y']
         
         return arr2d_batch, arr2d_xy
-    
-    pass
 
 
 #******************************************************************************
@@ -190,5 +232,3 @@ class DataGenerator_xy2(DataGenerator):
         arr2d_xy[:,3] = sArr[:]['y']
         
         return arr2d_batch, arr2d_xy
-    
-    pass
