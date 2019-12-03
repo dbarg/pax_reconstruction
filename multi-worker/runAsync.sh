@@ -6,8 +6,8 @@
 #SBATCH --partition=xenon1t
 #SBATCH --qos=xenon1t
 
-#SBATCH --nodes=2
-#SBATCH --ntasks=2
+#SBATCH --nodes=3
+#SBATCH --ntasks=3
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=4GB
 #SBATCH --time=24:00:00
@@ -17,6 +17,8 @@
 
 source ~/.bash/.setup_pax_head.sh
 
-echo "Hello"
-python ./multi-worker.py
+echo "Starting..."
+
+python './wrapper.py'
+     
 echo "Done"
