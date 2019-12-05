@@ -1,6 +1,7 @@
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 
+import numpy as np
 import os
 import re
 
@@ -89,12 +90,56 @@ def main():
         task_index=0
     )
     
-    if (isServer):
-        print("Joining Server...")
-        #server.join()
-    else:
-        print("HERE")
+    
+    #--------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
+    if (isServer):
+        
+        print("Joining Server...")
+        server.join()
+        
+    else:
+        print("Working...")
+        
+        with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % 0, cluster=cluster)):
+
+            y_true = tf.Variable( np.random.random(10) )
+            y_pred = tf.Variable( np.random.random(10) )
+            
+            # Build model...
+            #loss        = tf.nn.l2_loss(labels=y_true, y_pred)
+            loss        = tf.reduce_mean(tf.squared_difference(y_true, y_pred))
+            global_step = tf.contrib.framework.get_or_create_global_step()
+            train_op    = tf.train.AdagradOptimizer(0.01).minimize(loss, global_step=global_step)
+
+    
+        #----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        
+        # The StopAtStepHook handles stopping after running given steps.
+        hooks=[tf.train.StopAtStepHook(last_step=10)]
+    
+        # The MonitoredTrainingSession takes care of session initialization,
+        # restoring from a checkpoint, saving to a checkpoint, and closing when done
+        # or an error occurs.
+        
+        with tf.train.MonitoredTrainingSession(
+            master=server.target,
+            #is_chief=(FLAGS.task_index == 0),
+            is_chief=True,
+            checkpoint_dir="/scratch/midway2/dbarge",
+            hooks=hooks) as mon_sess:
+            
+              while not mon_sess.should_stop():
+                    
+                # Run a training step asynchronously.
+                # See `tf.train.SyncReplicasOptimizer` for additional details on how to
+                # perform *synchronous* training.
+                # mon_sess.run handles AbortedError in case of preempted PS.
+                mon_sess.run(train_op)
+                
+                continue
     
     #--------------------------------------------------------------------------
     #--------------------------------------------------------------------------
