@@ -17,4 +17,4 @@
 
 source ~/.bash/.setup_pax_head.sh
 
-srun python wrapper.py &
+srun python wrapper.py
