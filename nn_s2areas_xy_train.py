@@ -17,7 +17,10 @@ from nn_s2waveforms_base import *
 class test(keras.callbacks.Callback):
     
     def on_epoch_end(self, epoch, logs={}):
+        
+        print()
         os.system('nvidia-smi')
+        print()
         
     pass
 
@@ -27,13 +30,17 @@ class test(keras.callbacks.Callback):
 
 class nn_s2areas_xy(nn_waveforms):
     
+    #--------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
-    def train(self):
+    def train(self, verbose=False):
 
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
 
-        tf.debugging.set_log_device_placement(True)
+        
+        if (verbose):
+            tf.debugging.set_log_device_placement(True)
         
         #gpus = K.tensorflow_backend._get_available_gpus()
         gpus = tf.config.experimental.list_logical_devices('GPU')
