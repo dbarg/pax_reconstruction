@@ -24,6 +24,9 @@ echo "\n>nvidia-smi\n"
 nvidia-smi
 
 srun --profile=All --acctg-freq=1 --task-epilog=./epilog.sh ../nn_s2areas_xy_train.py -directory /project2/lgrandi/dbarge/pax_merge/temp_s2/ -max_dirs 11 -events_per_batch 1000 -downsample 10
+#srun --profile=All --acctg-freq=1 ../nn_s2areas_xy_train.py -directory /project2/lgrandi/dbarge/pax_merge/temp_s2/ -max_dirs 11 -events_per_batch 1000 -downsample 10
+
+#python ./test.py
 
 # Add lines here to run your GPU-based computations.
 echo "Done"
