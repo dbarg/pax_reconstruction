@@ -133,6 +133,7 @@ def main():
             
               while not mon_sess.should_stop():
                     
+                print("HERE")
                 # Run a training step asynchronously.
                 # See `tf.train.SyncReplicasOptimizer` for additional details on how to
                 # perform *synchronous* training.
@@ -140,6 +141,8 @@ def main():
                 mon_sess.run(train_op)
                 
                 continue
+    
+        print("Work Complete.")
     
     #--------------------------------------------------------------------------
     #--------------------------------------------------------------------------

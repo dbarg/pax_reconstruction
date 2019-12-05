@@ -2,17 +2,49 @@
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 
+import tensorflow as tf
+
+from keras import backend as K
+from tensorflow.python.client import device_lib
+
 from generator_waveforms import *
 from nn_s2waveforms_base import *
 
+
+#******************************************************************************
+#******************************************************************************
     
+class test(keras.callbacks.Callback):
+    
+    def on_epoch_end(self, epoch, logs={}):
+        os.system('nvidia-smi')
+        
+    pass
+
+
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 
 class nn_s2areas_xy(nn_waveforms):
     
+
     def train(self):
 
+        #----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+
+        tf.debugging.set_log_device_placement(True)
+        
+        #gpus = K.tensorflow_backend._get_available_gpus()
+        gpus = tf.config.experimental.list_logical_devices('GPU')
+
+        print("Devs:           {0}".format(device_lib.list_local_devices()))
+        print("Available GPUS: {0}".format(gpus))
+        
+        
+        #----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        
         epb = self.events_per_batch
         
         datagen_train = DataGenerator_s2areas_xy(self.lst_files_train, events_per_batch=epb, shuffle=True)
@@ -26,13 +58,17 @@ class nn_s2areas_xy(nn_waveforms):
             activation='relu'
         )
 
+        tst = test()
+        
         print("Start")
         self.history  = self.model.fit_generator(
             generator=datagen_train,
-            epochs=50,
+            epochs=10,
             shuffle=False,
-            callbacks=[self.hist],
-            use_multiprocessing=False,
+            callbacks=[self.hist, tst],
+            #use_multiprocessing=False,
+            use_multiprocessing=True,
+            workers=16,
             verbose=2
         )
         print("Done")
