@@ -8,10 +8,12 @@
 #SBATCH --account=pi-lgrandi
 #SBATCH --partition=xenon1t,dali
 #SBATCH --qos=xenon1t
+#SBATCH --profile=task
 
 #SBATCH --output=log.txt
 #SBATCH --error=log.txt
 
 source ~/.bash/.setup_pax_head.sh
 
-srun --profile python ../nn_s2waveforms_xy_train.py -directory ../../../xe1t-processing/pax_merge/temp_s2/ -max_dirs 11 -events_per_batch 100 -downsample 10
+#srun --profile python ../nn_s2waveforms_xy_train.py -directory ../../../xe1t-processing/pax_merge/temp_s2/ -max_dirs 11 -events_per_batch 100 -downsample 10
+srun python ../nn_s2waveforms_xy_train.py -directory ../../../xe1t-processing/pax_merge/temp_s2/ -max_dirs 11 -events_per_batch 100 -downsample 10
