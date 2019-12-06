@@ -16,8 +16,11 @@
 
 source ~/.bash/.setup_ml.sh
 
+export TMPDIR=/scratch/midway2/$USER/slurm/$SLURM_JOBID
+export SLURM_TMPDIR=/scratch/midway2/$USER/slurm/$SLURM_JOBID
+
 echo "Starting..."
 
-srun --profile=All --acctg-freq=1 --task-prolog=./prolog.sh --task-epilog=/dali/lgrandi/dbarge/pax_reconstruction/profiling/epilog.sh python test.py
+srun --preserve-env --profile=All --acctg-freq=1 --task-prolog=./prolog.sh --task-epilog=/dali/lgrandi/dbarge/pax_reconstruction/profiling/epilog.sh python test.py
 
 echo "Done"

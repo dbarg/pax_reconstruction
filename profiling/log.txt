@@ -6,5 +6,8 @@ PYTHONPATH:
 JUPYTER_PATH:
 /dali/lgrandi/dbarge/utils
 Starting...
-midway2-0411.rcc.local
+
+TMPDIR:       /tmp/jobs/64172757
+SLURM_TMPDIR: /tmp/jobs/64172757
+
 Done

@@ -13,11 +13,20 @@ from utils_slurm import *
      
 def main():
 
-    print()
-    print("TMPDIR:       {0}".format(os.environ.get('TMPDIR')))
-    print("SLURM_TMPDIR: {0}".format(os.environ.get('SLURM_TMPDIR')))
-    print()
-
+    env = get_slurm_env()
+    
+    with open("/scratch/midway2/dbarge/slurm/tmp.txt", "w") as f:
+        
+        f.write('Hello')
+        
+        for k in env:
+            f.write("{0} = {1}\n".format(k, env[k]))
+    
+    tmpdir = os.environ.get('SLURM_TMPDIR')
+    
+    if (not os.path.isdir(tmpdir)):
+        os.mkdir(tmpdir)
+    
     return
 
 
