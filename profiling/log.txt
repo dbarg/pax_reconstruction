@@ -1,0 +1,10 @@
+
+PYTHONPATH:
+/dali/lgrandi/dbarge/utils
+/dali/lgrandi/dbarge/utils
+
+JUPYTER_PATH:
+/dali/lgrandi/dbarge/utils
+Starting...
+midway2-0411.rcc.local
+Done
