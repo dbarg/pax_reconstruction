@@ -8,6 +8,11 @@ from nn_s2waveforms_base import *
 
 from generator_waveforms import *
 from keras import backend as K
+from keras import optimizers
+from keras import regularizers
+from keras.layers import Dense
+from keras.layers import Dropout
+from keras.models import Sequential
 from keras.utils import multi_gpu_model
 
 import tensorflow as tf
@@ -38,7 +43,7 @@ class nn_xy_s2waveforms(nn_waveforms):
         #----------------------------------------------------------------------
         
         K.set_floatx('float16')
-        K.set_epsilon(1e-4) 
+        K.set_epsilon(1e-3) 
                   
         
         #----------------------------------------------------------------------
@@ -49,8 +54,10 @@ class nn_xy_s2waveforms(nn_waveforms):
         intra = tf.compat.v1.config.threading.get_intra_op_parallelism_threads()
         inter = tf.compat.v1.config.threading.get_inter_op_parallelism_threads()
 
+        print()
         print("intra_op_parallelism_threads: {0}".format(intra))
         print("inter_op_parallelism_threads: {0}".format(inter))
+        print()
         
         #config.inter_op_parallelism_threads=2
         #config.intra_op_parallelism_threads=2
@@ -110,18 +117,19 @@ class nn_xy_s2waveforms(nn_waveforms):
             
             with tf.device('/cpu:0'):
                 
-                #self.model          = kutils.dnn_regression(self.input_dim, 2, [127], doCompile=False)
-                model      = Sequential()
-                kernel_reg = regularizers.l2(.001)
-                self.model.add(
-                    Dense(self.input_dim, input_dim=self.input_dim, activation='relu', kernel_regularizer=kernel_reg)
-                )
-                self.model.add(Dropout(dropout))
-                self.model.add(Dense(2))
-                #self.parallel_model = multi_gpu_model(self.model, gpus=2, cpu_merge=True, cpu_relocation=True)
-                #self.parallel_model.compile(loss='mse', optimizer='adam', metrics=['acc'])
-                self.model = multi_gpu_model(self.model, gpus=2, cpu_merge=True, cpu_relocation=True)
-                self.model.compile(loss='mse', optimizer='adam', metrics=['acc'])
+                if (False):
+                    self.model = kutils.dnn_regression(self.input_dim, 2, [127], doCompile=False)
+                else:
+                    
+                    self.model = Sequential()
+                    kernel_reg = regularizers.l2(.001)
+                    self.model.add(Dense(
+                        self.input_dim, input_dim=self.input_dim, activation='relu', kernel_regularizer=kernel_reg
+                    ))
+                    self.model.add(Dropout(0.00005))
+                    self.model.add(Dense(2))
+                    self.model = multi_gpu_model(self.model, gpus=2, cpu_merge=True, cpu_relocation=True)
+                    self.model.compile(loss='mse', optimizer='adam', metrics=['acc'])
                 
                 print("\n-> Compiled Multi-GPU model") 
         
@@ -142,14 +150,14 @@ class nn_xy_s2waveforms(nn_waveforms):
         print("\n------- Fit Generator -------\n")
         self.history = self.model.fit_generator(
             generator=datagen_train,
-            epochs=1,
+            epochs=self.epochs,
             #steps_per_epoch=1,
             callbacks=[self.hist],
             verbose=1,
             shuffle=False,
-            use_multiprocessing=False#,
+            use_multiprocessing=True,
             #max_queue_size=10,
-            #workers=4
+            workers=4
         )
         
         print("Done")

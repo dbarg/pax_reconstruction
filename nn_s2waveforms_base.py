@@ -87,6 +87,8 @@ class nn_waveforms():
         self.args             = parse_arguments()
         dir_data              = self.args.directory
         self.max_dirs         = self.args.max_dirs
+        self.epochs           = self.args.epochs
+        
         self.isGpu            = self.args.gpu
         self.events_per_batch = self.args.events_per_batch 
         self.downsample       = self.args.downsample
@@ -244,6 +246,7 @@ def parse_arguments():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-directory'       , required=True)
+    parser.add_argument('-epochs'          , required=True, type=int)
     parser.add_argument('-max_dirs'        , required=True, type=int)
     parser.add_argument('-events_per_batch', required=True, type=int)
     parser.add_argument('-downsample'      , required=True, type=int)

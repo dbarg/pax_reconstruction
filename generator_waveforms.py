@@ -131,6 +131,8 @@ class DataGenerator(keras.utils.Sequence):
         #------------------------------------------------------------------------------
         #------------------------------------------------------------------------------
         
+        assert not np.any(np.isnan(arr2d_batch))
+        
         return arr2d_batch, sArr
         
 
