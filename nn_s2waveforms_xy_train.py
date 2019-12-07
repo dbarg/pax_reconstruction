@@ -25,7 +25,14 @@ class nn_xy_s2waveforms(nn_waveforms):
     #--------------------------------------------------------------------------
     
     def train(self):
-              
+        
+        #----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        
+        config                      = tf.compat.v1.ConfigProto()
+        config.log_device_placement = True
+        
+        
         #----------------------------------------------------------------------
         # Reduce Memory
         #----------------------------------------------------------------------
@@ -44,6 +51,9 @@ class nn_xy_s2waveforms(nn_waveforms):
 
         print("intra_op_parallelism_threads: {0}".format(intra))
         print("inter_op_parallelism_threads: {0}".format(inter))
+        
+        #config.inter_op_parallelism_threads=2
+        #config.intra_op_parallelism_threads=2
         
     
         #----------------------------------------------------------------------
@@ -69,18 +79,10 @@ class nn_xy_s2waveforms(nn_waveforms):
             
             
         #----------------------------------------------------------------------
+        # CPU
         #----------------------------------------------------------------------
         
-        strategy            = tf.distribute.experimental.MultiWorkerMirroredStrategy()
-        self.parallel_model = None
-      
         if (not self.isGpu):
-            
-            #config=tf.compat.v1.ConfigProto(
-            #    log_device_placement=True,
-            #    intra_op_parallelism_threads=2,
-            #    inter_op_parallelism_threads=2
-            #)
             
             #sess = tf.compat.v1.Session(graph=tf.get_default_graph(), config=session_conf)
             #sess = tf.compat.v1.Session(config=config)
@@ -88,20 +90,23 @@ class nn_xy_s2waveforms(nn_waveforms):
 
             self.model = kutils.dnn_regression(self.input_dim, 2, [127], doCompile=False)
             self.model.compile(loss='mse', optimizer='adam', metrics=['acc'])
-            
+          
+      
+        #----------------------------------------------------------------------
+        # GPU
+        #----------------------------------------------------------------------
+        
         else:
              
             config.gpu_options.allocator_type='BFC'
             config.gpu_options.per_process_gpu_memory_fraction=0.95
             sess = tf.compat.v1.Session(config=config)
-            #tf.compat.v1.keras.backend.set_session(sess)
-        
+            tf.compat.v1.keras.backend.set_session(sess)
         
             physical_devices = tf.config.experimental.list_physical_devices('GPU')
             assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
             for iGPU, dev in enumerate(physical_devices):
                 tf.config.experimental.set_memory_growth(physical_devices[iGPU], True)
-
             
             with tf.device('/cpu:0'):
                 
