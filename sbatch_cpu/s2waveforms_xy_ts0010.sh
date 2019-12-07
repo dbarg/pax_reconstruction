@@ -9,8 +9,8 @@
 
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem-per-cpu=2GB
+#SBATCH --cpus-per-task=32
+#SBATCH --mem-per-cpu=500MB
 
 #SBATCH --output=log_s2waveforms_xy_ts10.txt # output log file
 #SBATCH --error=log_s2waveforms_xy_ts10.txt  # error file
