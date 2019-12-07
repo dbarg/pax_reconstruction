@@ -1,37 +1,19 @@
-
-#------------------------------------------------------------------------------
-#------------------------------------------------------------------------------
-     
 import os
-import time
 
-from utils_slurm import *
-
-    
-#------------------------------------------------------------------------------
-#------------------------------------------------------------------------------
-     
 def main():
-
-    env = get_slurm_env()
     
-    with open("/scratch/midway2/dbarge/slurm/tmp.txt", "w") as f:
-        
-        f.write('Hello')
-        
-        for k in env:
-            f.write("{0} = {1}\n".format(k, env[k]))
+    tmpdir   = os.environ.get('TMPDIR') 
+    slurmdir = os.environ.get('SLURM_TMPDIR') 
+    cmd      = 'ls -l {0}'.format(slurmdir)
     
-    tmpdir = os.environ.get('SLURM_TMPDIR')
+    print('------------')
+    print('$SLURM_TMPDIR: {0}'.format(slurmdir))
+    print(cmd)
+    #os.system('env')
     
-    if (not os.path.isdir(tmpdir)):
-        os.mkdir(tmpdir)
+    os.system(cmd)
     
     return
 
-
-#------------------------------------------------------------------------------
-#------------------------------------------------------------------------------
-     
 if __name__ == '__main__':
     main()

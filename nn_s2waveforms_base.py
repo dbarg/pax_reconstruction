@@ -87,7 +87,7 @@ class nn_waveforms():
         self.args             = parse_arguments()
         dir_data              = self.args.directory
         self.max_dirs         = self.args.max_dirs
-        
+        self.isGpu            = self.args.gpu
         self.events_per_batch = self.args.events_per_batch 
         self.downsample       = self.args.downsample
         self.input_dim        = int(127000 / self.downsample)
@@ -231,8 +231,6 @@ class nn_waveforms():
     
         print("\nDone in {0:.1f} min".format(dt))
         
-        
-        
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
         
@@ -249,7 +247,8 @@ def parse_arguments():
     parser.add_argument('-max_dirs'        , required=True, type=int)
     parser.add_argument('-events_per_batch', required=True, type=int)
     parser.add_argument('-downsample'      , required=True, type=int)
-    
+    parser.add_argument('-gpu'             , required=False, default=False, type=lambda x: (str(x).lower() == 'true'))
+
     arguments = parser.parse_args()
     
     return arguments

@@ -26,7 +26,7 @@ module load cuda/10.1
 echo "\n>nvidia-smi\n"
 nvidia-smi
 
-srun python ../nn_s2waveforms_xy_train.py -directory /project2/lgrandi/dbarge/pax_merge/temp_s2/ -gpu True -max_dirs 2 -events_per_batch 100 -downsample 2
+srun python ../nn_s2waveforms_xy_train.py -directory /project2/lgrandi/dbarge/pax_merge/temp_s2/ -gpu True -max_dirs 2 -events_per_batch 100 -downsample 10
 
 # Add lines here to run your GPU-based computations.
 echo "Done"
