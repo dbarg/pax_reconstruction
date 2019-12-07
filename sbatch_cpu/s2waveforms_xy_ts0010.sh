@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=nn_cpu
-#SBATCH --time=24:00:00
+#SBATCH --time=48:00:00
 
 #SBATCH --account=pi-lgrandi
 #SBATCH --partition=xenon1t,dali
@@ -10,7 +10,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
-#SBATCH --mem-per-cpu=500MB
+#SBATCH --mem-per-cpu=250MB
 
 #SBATCH --output=log_s2waveforms_xy_ts10.txt # output log file
 #SBATCH --error=log_s2waveforms_xy_ts10.txt  # error file

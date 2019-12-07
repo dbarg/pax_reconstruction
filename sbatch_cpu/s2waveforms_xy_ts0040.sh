@@ -12,11 +12,11 @@
 #SBATCH --cpus-per-task=32
 #SBATCH --mem-per-cpu=250MB
 
-#SBATCH --output=log_s2waveforms_xy_ts25.txt # output log file
-#SBATCH --error=log_s2waveforms_xy_ts25.txt  # error file
+#SBATCH --output=log_s2waveforms_xy_ts40.txt # output log file
+#SBATCH --error=log_s2waveforms_xy_ts40.txt  # error file
 
 source ~/.bash/.setup_ml.sh
 
-srun python ../nn_s2waveforms_xy_train.py -directory /project2/lgrandi/dbarge/pax_merge/temp_s2/ -max_dirs 22 -events_per_batch 100 -epochs 10 -downsample 40
+srun python ../nn_s2waveforms_xy_train.py -directory /project2/lgrandi/dbarge/pax_merge/temp_s2/ -max_dirs 22 -events_per_batch 100 -epochs 10 -downsample 25
 
 echo "Done"
