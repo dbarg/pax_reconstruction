@@ -15,7 +15,7 @@ from keras.layers import Dropout
 from keras.models import Sequential
 from keras.utils import multi_gpu_model
 
-import tensorflow as tf
+#import tensorflow as tf
 #from tensorflow.python.client import device_lib
 
 import theano
@@ -36,6 +36,8 @@ class nn_xy_s2waveforms(nn_waveforms):
     #--------------------------------------------------------------------------
     
     def train(self):
+        
+        print("train")
         
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
@@ -88,17 +90,17 @@ class nn_xy_s2waveforms(nn_waveforms):
         
         else:
             
-            if (True):
-                
-                config = tf.compat.v1.ConfigProto()
-                config.gpu_options.allocator_type='BFC'
-                config.gpu_options.per_process_gpu_memory_fraction=0.95
-                sess = tf.compat.v1.Session(config=config)
-                tf.compat.v1.keras.backend.set_session(sess)
-                physical_devices = tf.config.experimental.list_physical_devices('GPU')
-                assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
-                for iGPU, dev in enumerate(physical_devices):
-                    tf.config.experimental.set_memory_growth(physical_devices[iGPU], True)
+            #if (False):
+            #    
+            #    config = tf.compat.v1.ConfigProto()
+            #    config.gpu_options.allocator_type='BFC'
+            #    config.gpu_options.per_process_gpu_memory_fraction=0.95
+            #    sess = tf.compat.v1.Session(config=config)
+            #    tf.compat.v1.keras.backend.set_session(sess)
+            #    physical_devices = tf.config.experimental.list_physical_devices('GPU')
+            #    assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
+            #    for iGPU, dev in enumerate(physical_devices):
+            #        tf.config.experimental.set_memory_growth(physical_devices[iGPU], True)
             
             #with tf.device('/cpu:0'):
                 
@@ -170,6 +172,8 @@ class nn_xy_s2waveforms(nn_waveforms):
 
 if (__name__ == "__main__"):
 
+    print("main")
+    
     nn = nn_xy_s2waveforms()
     nn.run()
     

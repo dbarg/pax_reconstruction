@@ -5,12 +5,13 @@
 
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=24
+#SBATCH --cpus-per-task=28
 #SBATCH --mem-per-cpu=1GB
 
 #SBATCH --partition=gpu2
-#SBATCH --gres=gpu:2
-#SBATCH --mem-per-gpu=8GB
+#SBATCH --gres=gpu:4
+#SBATCH --exclusive
+##SBATCH --mem=13GB
 
 #SBATCH --mail-type=END
 #SBATCH --mail-user=dbarge
