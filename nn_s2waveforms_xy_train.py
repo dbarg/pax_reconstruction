@@ -16,14 +16,15 @@ from keras.models import Sequential
 from keras.utils import multi_gpu_model
 
 import tensorflow as tf
-from tensorflow.python.client import device_lib
+#from tensorflow.python.client import device_lib
+
+import theano
+#theano.config.device = 'gpu'
+#theano.config.floatX = 'float16'
 
 from utils_slurm import *
 
 proc = psutil.Process(os.getpid())
-
-
-
 
 
 #------------------------------------------------------------------------------
@@ -38,10 +39,7 @@ class nn_xy_s2waveforms(nn_waveforms):
         
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
-        
-        config                      = tf.compat.v1.ConfigProto()
-        config.log_device_placement = True
-        
+       
         
         #----------------------------------------------------------------------
         # Reduce Memory
@@ -56,39 +54,17 @@ class nn_xy_s2waveforms(nn_waveforms):
         # Anything to gain here?
         #----------------------------------------------------------------------
         
-        intra = tf.compat.v1.config.threading.get_intra_op_parallelism_threads()
-        inter = tf.compat.v1.config.threading.get_inter_op_parallelism_threads()
-
-        print()
-        print("intra_op_parallelism_threads: {0}".format(intra))
-        print("inter_op_parallelism_threads: {0}".format(inter))
-        print()
+        #config                      = tf.compat.v1.ConfigProto()
+        #config.log_device_placement = True
+        #intra = tf.compat.v1.config.threading.get_intra_op_parallelism_threads()
+        #inter = tf.compat.v1.config.threading.get_inter_op_parallelism_threads()
+        #print()
+        #print("intra_op_parallelism_threads: {0}".format(intra))
+        #print("inter_op_parallelism_threads: {0}".format(inter))
+        #print()
+        ##config.inter_op_parallelism_threads=2
+        ##config.intra_op_parallelism_threads=2
         
-        #config.inter_op_parallelism_threads=2
-        #config.intra_op_parallelism_threads=2
-        
-    
-        #----------------------------------------------------------------------
-        #----------------------------------------------------------------------
-      
-        if (False):
-            
-            #physical_devices = tf.config.experimental.list_physical_devices('CPU')
-            #assert len(physical_devices) > 0, "Not enough CPU hardware devices available"
-            #for i, dev in enumerate(physical_devices):
-            #    print("{0} {1}".format(i, dev))
-        
-            env = get_slurm_env()
-            print(env)
-            
-            tfconfig = get_tf_config()
-            print("\n\ntfconfig:")
-            print(tfconfig)
-            nodename = os.environ.get('SLURM_NODENAME')
-            print(nodename)
-            
-            os.environ['TF_CONFIG'] = json.dumps(tfconfig)
-            
             
         #----------------------------------------------------------------------
         # CPU
@@ -111,33 +87,34 @@ class nn_xy_s2waveforms(nn_waveforms):
         #----------------------------------------------------------------------
         
         else:
-             
-            config.gpu_options.allocator_type='BFC'
-            config.gpu_options.per_process_gpu_memory_fraction=0.95
-            sess = tf.compat.v1.Session(config=config)
-            tf.compat.v1.keras.backend.set_session(sess)
-        
-            physical_devices = tf.config.experimental.list_physical_devices('GPU')
-            assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
-            for iGPU, dev in enumerate(physical_devices):
-                tf.config.experimental.set_memory_growth(physical_devices[iGPU], True)
             
-            with tf.device('/cpu:0'):
+            if (True):
                 
-                if (False):
-                    self.model = kutils.dnn_regression(self.input_dim, 2, [127], doCompile=False)
-                else:
-                    
-                    self.model = Sequential()
-                    kernel_reg = regularizers.l2(.001)
-                    self.model.add(Dense(
-                        self.input_dim, input_dim=self.input_dim, activation='relu', kernel_regularizer=kernel_reg
-                    ))
-                    self.model.add(Dropout(0.00005))
-                    self.model.add(Dense(2))
-                    self.model = multi_gpu_model(self.model, gpus=2, cpu_merge=True, cpu_relocation=True)
-                    self.model.compile(loss='mse', optimizer='adam', metrics=['acc'])
+                config = tf.compat.v1.ConfigProto()
+                config.gpu_options.allocator_type='BFC'
+                config.gpu_options.per_process_gpu_memory_fraction=0.95
+                sess = tf.compat.v1.Session(config=config)
+                tf.compat.v1.keras.backend.set_session(sess)
+                physical_devices = tf.config.experimental.list_physical_devices('GPU')
+                assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
+                for iGPU, dev in enumerate(physical_devices):
+                    tf.config.experimental.set_memory_growth(physical_devices[iGPU], True)
+            
+            #with tf.device('/cpu:0'):
                 
+            if (True):
+                self.model = kutils.dnn_regression(self.input_dim, 2, [127], doCompile=True)
+            else:
+                
+                self.model = Sequential()
+                kernel_reg = regularizers.l2(.001)
+                self.model.add(Dense(
+                    self.input_dim, input_dim=self.input_dim, activation='relu', kernel_regularizer=kernel_reg
+                ))
+                self.model.add(Dropout(0.00005))
+                self.model.add(Dense(2))
+                self.model = multi_gpu_model(self.model, gpus=2, cpu_merge=True, cpu_relocation=True)
+                self.model.compile(loss='mse', optimizer='adam', metrics=['acc'])
                 print("\n-> Compiled Multi-GPU model") 
         
         

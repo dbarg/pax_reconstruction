@@ -132,6 +132,7 @@ class nn_waveforms():
         self.hist  = kutils.logHistory()
         self.t0    = time.time()
 
+        self.strArrPred = None
        
             
         
