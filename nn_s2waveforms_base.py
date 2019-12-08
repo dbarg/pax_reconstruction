@@ -16,7 +16,6 @@ import utils_keras as kutils
 
 from generator_waveforms import *
 
-proc = psutil.Process(os.getpid())
 
 
 #------------------------------------------------------------------------------
@@ -38,7 +37,21 @@ class nn_waveforms():
     def validate(self, mygen):
 
         print("\n\n----- Validate -----\n\n")
-    
+
+        #self.arr2d_pred = np.zeros(shape=(self.events_per_file*n_test, 6))
+        
+        self.strArrPred = np.zeros(
+            self.n_events_test,
+            dtype=[
+                ('x_true', np.float32),
+                ('y_true', np.float32),
+                ('x_pred', np.float32),
+                ('y_pred', np.float32),
+                ('x_reco', np.float32),
+                ('y_reco', np.float32)
+            ]
+        )
+        
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
 
@@ -88,7 +101,6 @@ class nn_waveforms():
         dir_data              = self.args.directory
         self.max_dirs         = self.args.max_dirs
         self.epochs           = self.args.epochs
-        
         self.isGpu            = self.args.gpu
         self.events_per_batch = self.args.events_per_batch 
         self.downsample       = self.args.downsample
@@ -115,23 +127,12 @@ class nn_waveforms():
         self.dir_out          = './models/'
 
         self.n_epochs_train   = int( (self.events_per_file) / (self.events_per_batch) )*n_train
-        self.arr2d_pred       = np.zeros(shape=(self.events_per_file*n_test, 6))
 
         self.model = None
         self.hist  = kutils.logHistory()
         self.t0    = time.time()
 
-        self.strArrPred = np.zeros(
-            self.n_events_test,
-            dtype=[
-                ('x_true', np.float32),
-                ('y_true', np.float32),
-                ('x_pred', np.float32),
-                ('y_pred', np.float32),
-                ('x_reco', np.float32),
-                ('y_reco', np.float32)
-            ]
-        )
+       
             
         
         #------------------------------------------------------------------------------

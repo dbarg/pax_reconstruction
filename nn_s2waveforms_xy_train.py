@@ -20,6 +20,11 @@ from tensorflow.python.client import device_lib
 
 from utils_slurm import *
 
+proc = psutil.Process(os.getpid())
+
+
+
+
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -43,7 +48,7 @@ class nn_xy_s2waveforms(nn_waveforms):
         #----------------------------------------------------------------------
         
         K.set_floatx('float16')
-        K.set_epsilon(1e-3) 
+        K.set_epsilon(1e-2) 
                   
         
         #----------------------------------------------------------------------
@@ -88,6 +93,8 @@ class nn_xy_s2waveforms(nn_waveforms):
         #----------------------------------------------------------------------
         # CPU
         #----------------------------------------------------------------------
+        
+        print("\n------- Compiling Model -------\n")
         
         if (not self.isGpu):
             
@@ -137,6 +144,8 @@ class nn_xy_s2waveforms(nn_waveforms):
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
         
+        print("\n------- Data Generator -------\n")
+        
         ds  = self.downsample
         epb = self.events_per_batch
 
@@ -147,12 +156,15 @@ class nn_xy_s2waveforms(nn_waveforms):
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
         
-        print("\n------- Fit Generator -------\n")
+        print("\n------- Fit -------\n")
+            
+        self.mem = kutils.logMemory(proc)
+            
         self.history = self.model.fit_generator(
             generator=datagen_train,
             epochs=self.epochs,
             #steps_per_epoch=1,
-            callbacks=[self.hist],
+            callbacks=[self.hist, self.mem],
             verbose=1,
             shuffle=False,
             use_multiprocessing=True,

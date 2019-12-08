@@ -94,20 +94,17 @@ class DataGenerator(keras.utils.Sequence):
         i1    = int(i0 + self.events_per_batch)
         j0    = i0 + iFile*self.events_per_file
         j1    = j0 + self.events_per_batch
-        
-        with np.load(fpath) as data:
-            sArr = data['arr_0']
-                 
+
         batch_indices = self.file_indexes [i0:i1] # shuffled at epoch end
         #print("\n   batch indices: {0}\n".format(batch_indices))
         
-        #sArr = sArr[i0:i1][:][:]
-        sArr          = sArr[batch_indices][:][:]
-        arr3d         = sArr[:][:]['image']
-        arr3d_ds      = kernutils.downsample_arr3d(arr3d, self.downsample)
-        arr3d_batch   = arr3d_ds[:][:] 
-        arr2d_batch   = arr3d_batch.reshape(arr3d_batch.shape[0], arr3d_batch.shape[1]*arr3d_batch.shape[2])
+        with np.load(fpath) as data:
+            sArr = (data['arr_0'])[batch_indices][:]
+            #sArr = sArr[i0:i1][:][:]
+            #sArr = sArr[batch_indices][:][:]
 
+        arr3d_batch = kernutils.downsample_arr3d(sArr[:][:]['image'], self.downsample)
+        arr2d_batch = arr3d_batch.reshape(arr3d_batch.shape[0], arr3d_batch.shape[1]*arr3d_batch.shape[2])
 
 
         #------------------------------------------------------------------------------
@@ -133,7 +130,7 @@ class DataGenerator(keras.utils.Sequence):
         
         assert not np.any(np.isnan(arr2d_batch))
         
-        return arr2d_batch, sArr
+        return arr2d_batch, sArr[:][['true_x', 'true_y', 'x', 'y', 's2_areas']]
         
 
     #--------------------------------------------------------------------------
@@ -174,11 +171,6 @@ class DataGenerator_s2areas_xy(DataGenerator):
         arr2d_xy[:,0]  = sArr[:]['true_x']
         arr2d_xy[:,1]  = sArr[:]['true_y']
         arr_s2areas    = sArr[:]['s2_areas']
-        
-        s2area_sums    = np.sum(arr_s2areas, axis=1)
-        s2area_sum_min = np.amin(s2area_sums)
-        
-        assert(s2area_sum_min > 0)
         
         return arr_s2areas, arr2d_xy
 
